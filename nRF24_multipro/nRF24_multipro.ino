@@ -86,7 +86,6 @@ enum {
     PROTO_CG023,
     PROTO_CX10_BLUE,
     PROTO_CX10_GREEN,
-    PROTO_XN297RX,
     PROTO_END
 };
 
