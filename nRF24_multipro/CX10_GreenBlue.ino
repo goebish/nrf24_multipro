@@ -42,12 +42,12 @@ uint32_t process_CX10()
 
 void CX10_init()
 {
+    uint8_t i;
     switch(current_protocol) {
         case PROTO_CX10_BLUE:
-            for(uint8_t i=0;i<4;i++) {
-                CX10_txid[i] = transmitterID[i];
+            for(i=0; i<4; i++) {
                 packet[5+i] = 0xFF; // clear aircraft ID
-            }
+            }            
             CX10_packet_length = CX10_BLUE_PACKET_LENGTH;
             CX10_packet_period = CX10_BLUE_PACKET_PERIOD;
             break;
@@ -56,7 +56,10 @@ void CX10_init()
             CX10_packet_period = CX10_GREEN_PACKET_PERIOD;
             break;
     }   
-     
+    
+    for(i=0; i<4; i++) {
+        CX10_txid[i] = transmitterID[i];
+    }     
     CX10_txid[1] &= 0x2F;
     CX10_freq[0] = (CX10_txid[0] & 0x0F) + 0x03;
     CX10_freq[1] = (CX10_txid[0] >> 4) + 0x16;
