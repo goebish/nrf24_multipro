@@ -232,7 +232,7 @@ static void V2x2_send_packet(uint8_t bind)
     V2x2_rf_ch_num = (V2x2_rf_ch_num + 1) & 0x1F;
     NRF24L01_WriteReg(NRF24L01_05_RF_CH, rf_ch);
     NRF24L01_FlushTx();
-    NRF24L01_WritePayload(packet, sizeof(packet));
+    NRF24L01_WritePayload(packet, V2x2_PAYLOADSIZE);
     delayMicroseconds(15);
 }
 
