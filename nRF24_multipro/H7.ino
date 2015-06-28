@@ -16,7 +16,7 @@
 // EAchine H7 TX protocol
 
 // Auxiliary channels:
-// CH5: mode (2 pos)
+// CH5: rate (2 pos)
 // CH6: flip flag
 // CH7: elevator trim
 // CH8: aileron trim
@@ -52,7 +52,8 @@ void H7_init()
     NRF24L01_Initialize();
     delay(10);
     NRF24L01_FlushTx();
-    memcpy((uint8_t*)"\xCC\xCC\xCC\xCC\xCC", H7_tx_addr, 5);
+    for(u8 i=0; i<5; i++)
+        H7_tx_addr[i] = 0xCC;
     XN297_SetTXAddr(H7_tx_addr, 5);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);    // clear data ready, data sent, and retransmit
     NRF24L01_WriteReg(NRF24L01_01_EN_AA, 0x00);     // no AA
@@ -79,9 +80,9 @@ void H7_bind()
     packet[1] = 0x14; // fixed
     packet[2] = 0x03; // fixed
     packet[3] = 0x25; // fixed
-    packet[4] = transmitterID[0]; // 1th byte for data phase tx address  
-    packet[5] = transmitterID[1]; // 2th byte for data phase tx address 
-    packet[6] = 0x00; // 3th byte for data phase tx address (always 0x00 ?)
+    packet[4] = transmitterID[0]; // 1st byte for data phase tx address  
+    packet[5] = transmitterID[1]; // 2nd byte for data phase tx address 
+    packet[6] = 0x00; // 3rd byte for data phase tx address (always 0x00 ?)
     packet[7] = checksum_offset; // checksum offset
     packet[8] = 0xAA; // fixed
     while(counter--) {
@@ -104,10 +105,9 @@ void H7_bind()
 }
 
 uint8_t H7_calcChecksum() {
-    uint8_t result=0;
+    uint8_t result=checksum_offset;
     for(uint8_t i=0; i<8; i++)
         result += packet[i];
-    result += checksum_offset;
     return result & 0xFF;
 }
 
