@@ -86,6 +86,7 @@ enum {
     PROTO_CG023,
     PROTO_CX10_BLUE,
     PROTO_CX10_GREEN,
+    PROTO_H7,
     PROTO_END
 };
 
@@ -142,15 +143,18 @@ void loop()
     // process protocol
     switch(current_protocol) {
         case PROTO_CG023:
-        timeout = process_CG023();
-        break;
+            timeout = process_CG023();
+            break;
         case PROTO_V2X2:
-        timeout = process_V2x2();
-        break;
+            timeout = process_V2x2();
+            break;
         case PROTO_CX10_GREEN:
         case PROTO_CX10_BLUE:
-        timeout = process_CX10();
-        break;
+            timeout = process_CX10();
+            break;
+        case PROTO_H7:
+            timeout = process_H7();
+            break;
     }
     // updates ppm values out of ISR
     update_ppm();
@@ -191,16 +195,25 @@ void selectProtocol()
         set_txid(true);                      // Renew Transmitter ID
     
     // protocol selection
-    if(ppm[ELEVATOR] > PPM_MAX_COMMAND)      // Elevator up  
+    
+    // Elevator up  + Aileron left
+    if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND) 
+        current_protocol = PROTO_H7;        // EAchine H7, MT9911
+    
+    // Elevator up  
+    else if(ppm[ELEVATOR] > PPM_MAX_COMMAND)
         current_protocol = PROTO_V2X2;       // WLToys V202/252/272, JXD 385/388 ...
         
-    else if(ppm[ELEVATOR] < PPM_MIN_COMMAND) // Elevator down
+    // Elevator down
+    else if(ppm[ELEVATOR] < PPM_MIN_COMMAND) 
         current_protocol = PROTO_CG023;      // EAchine CG023/CG031/3D X4, (todo :ATTOP YD-836/YD-836C) ...
-        
-    else if(ppm[AILERON] > PPM_MAX_COMMAND)  // Aileron right
+    
+    // Aileron right
+    else if(ppm[AILERON] > PPM_MAX_COMMAND)  
         current_protocol = PROTO_CX10_BLUE;  // Cheerson CX10(blue pcb)/CX10-A/CX11/CX12 ... 
     
-    else if(ppm[AILERON] < PPM_MIN_COMMAND)  // Aileron left
+    // Aileron left
+    else if(ppm[AILERON] < PPM_MIN_COMMAND)  
         current_protocol = PROTO_CX10_GREEN;  // Cheerson CX10(green pcb)... 
     
     // read last used protocol from eeprom
@@ -230,6 +243,10 @@ void init_protocol()
         case PROTO_CX10_BLUE:
             CX10_init();
             CX10_bind();
+            break;
+        case PROTO_H7:
+            H7_init();
+            H7_bind();
             break;
     }
 }
