@@ -31,7 +31,7 @@ static const uint8_t H7_mys_byte[] = {
     0x05, 0x15, 0x06, 0x16, 0x07, 0x17, 0x00, 0x10
 };
 
-uint8_t H7_tx_addr[] = {0xCC, 0xCC, 0xCC, 0xCC, 0xCC};
+uint8_t H7_tx_addr[5];
 
 uint8_t checksum_offset;
 uint8_t channel_offset;
@@ -52,6 +52,7 @@ void H7_init()
     NRF24L01_Initialize();
     delay(10);
     NRF24L01_FlushTx();
+    memcpy((uint8_t*)"\xCC\xCC\xCC\xCC\xCC", H7_tx_addr, 5);
     XN297_SetTXAddr(H7_tx_addr, 5);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);    // clear data ready, data sent, and retransmit
     NRF24L01_WriteReg(NRF24L01_01_EN_AA, 0x00);     // no AA
