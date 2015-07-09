@@ -37,7 +37,7 @@ uint32_t process_CX10()
     NRF24L01_WriteReg(NRF24L01_05_RF_CH, CX10_freq[CX10_current_chan++]);
     CX10_current_chan %= CX10_NUM_RF_CHANNELS;
     CX10_Write_Packet(0x55);
-    return nextPacket;   
+    return nextPacket;
 }
 
 void CX10_init()
@@ -47,7 +47,7 @@ void CX10_init()
         case PROTO_CX10_BLUE:
             for(i=0; i<4; i++) {
                 packet[5+i] = 0xFF; // clear aircraft ID
-            }            
+            }
             CX10_packet_length = CX10_BLUE_PACKET_LENGTH;
             CX10_packet_period = CX10_BLUE_PACKET_PERIOD;
             break;
@@ -55,17 +55,17 @@ void CX10_init()
             CX10_packet_length = CX10_GREEN_PACKET_LENGTH;
             CX10_packet_period = CX10_GREEN_PACKET_PERIOD;
             break;
-    }   
-    
+    }
+
     for(i=0; i<4; i++) {
         CX10_txid[i] = transmitterID[i];
-    }     
+    }
     CX10_txid[1] &= 0x2F;
     CX10_freq[0] = (CX10_txid[0] & 0x0F) + 0x03;
     CX10_freq[1] = (CX10_txid[0] >> 4) + 0x16;
     CX10_freq[2] = (CX10_txid[1] & 0x0F) + 0x2D;
     CX10_freq[3] = (CX10_txid[1] >> 4) + 0x40;
-  
+
     CX10_current_chan = 0;
     NRF24L01_Reset();
     NRF24L01_Initialize();
@@ -82,7 +82,7 @@ void CX10_init()
     NRF24L01_SetPower(3);                             // maximum rf power
     NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);       // Disable dynamic payload length on all pipes
     NRF24L01_WriteReg(NRF24L01_1D_FEATURE, 0x00);     // Set feature bits
-    delay(150);  
+    delay(150);
 }
 
 void CX10_bind()
@@ -119,13 +119,13 @@ void CX10_bind()
                     }
                 }
                 break;
-        }        
-        digitalWrite(ledPin, counter-- & 0x10); 
+        }
+        digitalWrite(ledPin, counter-- & 0x10);
         if(ppm[AUX8] > PPM_MAX_COMMAND) {
             reset = true;
             return;
-        }                           
-    }        
+        }
+    }
     digitalWrite(ledPin, HIGH);
 }
 
@@ -140,10 +140,10 @@ void CX10_Write_Packet(uint8_t init)
     packet[3] = CX10_txid[2];
     packet[4] = CX10_txid[3];
     // packet[5] to [8] (aircraft id) is filled during bind for blue board CX10
-    packet[5+offset] = lowByte(ppm[AILERON]);
-    packet[6+offset]= highByte(ppm[AILERON]);
-    packet[7+offset]= lowByte(ppm[ELEVATOR]);
-    packet[8+offset]= highByte(ppm[ELEVATOR]);
+    packet[5+offset] = lowByte(3000-ppm[AILERON]);
+    packet[6+offset]= highByte(3000-ppm[AILERON]);
+    packet[7+offset]= lowByte(3000-ppm[ELEVATOR]);
+    packet[8+offset]= highByte(3000-ppm[ELEVATOR]);
     packet[9+offset]= lowByte(ppm[THROTTLE]);
     packet[10+offset]= highByte(ppm[THROTTLE]);
     if(ppm[AUX2] > PPM_MID)
