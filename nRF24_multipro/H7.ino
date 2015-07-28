@@ -13,13 +13,15 @@
  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// EAchine H7 TX protocol
+// EAchine MT99xx (H7, MT9916 ...) TX protocol
 
 // Auxiliary channels:
-// CH5: rate (2 pos)
-// CH6: flip flag
-// CH7: elevator trim
-// CH8: aileron trim
+// CH5:  rate (3 pos)
+// CH6:  flip flag
+// CH7:  still camera
+// CH8:  video camera
+// CH10: elevator trim
+// CH11: aileron trim
 
 static const uint8_t H7_freq[] = {
     0x02, 0x48, 0x0C, 0x3e, 0x16, 0x34, 0x20, 0x2A,
@@ -29,6 +31,16 @@ static const uint8_t H7_freq[] = {
 static const uint8_t H7_mys_byte[] = {
     0x01, 0x11, 0x02, 0x12, 0x03, 0x13, 0x04, 0x14, 
     0x05, 0x15, 0x06, 0x16, 0x07, 0x17, 0x00, 0x10
+};
+
+enum {
+    // flags going to packet[6]
+    // H7_FLAG_RATE0, // default rate, no flag
+    H7_FLAG_RATE1   = 0x01,
+    H7_FLAG_RATE2   = 0x02,
+    H7_FLAG_VIDEO   = 0x10,
+    H7_FLAG_SNAPSHOT= 0x20,
+    H7_FLAG_FLIP    = 0x80,
 };
 
 uint8_t H7_tx_addr[5];
@@ -118,22 +130,34 @@ void H7_WritePacket()
     packet[1] = map(ppm[RUDDER], PPM_MIN, PPM_MAX, 0xE1, 0x00);
     packet[2] = map(ppm[AILERON], PPM_MIN, PPM_MAX, 0x00, 0xE1);
     packet[3] = map(ppm[ELEVATOR], PPM_MIN, PPM_MAX, 0x00, 0xE1);
-    packet[4] = map(ppm[AUX3], PPM_MIN, PPM_MAX, 0x3f, 0x00); // elevator trim 0x3f - 0x00
-    packet[5] = map(ppm[AUX4], PPM_MIN, PPM_MAX, 0x3f, 0x00); // aileron trim 0x3f - 0x00
-    packet[6] = 0; // flags
-    if(ppm[AUX2] > PPM_MAX_COMMAND)
-        packet[6] |= 0x80; // flip flag
-    if(ppm[AUX1] > PPM_MAX_COMMAND)
-        packet[6] |= 0x01; // mode
-    packet[7] = H7_mys_byte[channel];    
+    packet[4] = map(ppm[AUX6], PPM_MIN, PPM_MAX, 0x3f, 0x00); // elevator trim 0x3f - 0x00
+    packet[5] = map(ppm[AUX7], PPM_MIN, PPM_MAX, 0x3f, 0x00); // aileron trim 0x3f - 0x00
+    packet[6] = 0x40; // flags (default is 0x00 on H7, 0x40 on MT9916 stock TX)
+    if(ppm[AUX2] > PPM_MAX_COMMAND) {
+        packet[6] |= H7_FLAG_FLIP;
+    }        
+    if(ppm[AUX1] > PPM_MAX_COMMAND) {
+        packet[6] |= H7_FLAG_RATE2; 
+    }        
+    else if(ppm[AUX1] > PPM_MIN_COMMAND) {
+        packet[6] |= H7_FLAG_RATE1;
+    }        
+    if(ppm[AUX3] > PPM_MAX_COMMAND) {
+        packet[6] |= H7_FLAG_SNAPSHOT;
+    }        
+    if(ppm[AUX4] > PPM_MAX_COMMAND) {
+        packet[6] |= H7_FLAG_VIDEO;
+    }        
+    packet[7] = H7_mys_byte[channel]; // looks like this byte has no importance actually   
     packet[8] = H7_calcChecksum();
     NRF24L01_WriteReg(NRF24L01_05_RF_CH, H7_freq[channel]+channel_offset);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70); 
     NRF24L01_FlushTx();
     XN297_WritePayload(packet, H7_PAYPLOAD_SIZE);
     channel++;
-    if(channel > 15)
+    if(channel > 15) {
         channel = 0;
+    }        
 }
 
 uint32_t process_H7()

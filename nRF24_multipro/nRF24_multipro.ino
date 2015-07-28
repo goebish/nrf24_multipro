@@ -63,13 +63,13 @@ enum chan_order{
     AILERON,
     ELEVATOR,
     RUDDER,
-    AUX1,  // (CH5)  led light (3 pos. rate on Cheersons)
+    AUX1,  // (CH5)  led light (3 pos. rate on CX-10, H7)
     AUX2,  // (CH6)  flip control
     AUX3,  // (CH7)  sill camera
     AUX4,  // (CH8)  video camera
     AUX5,  // (CH9)  headless
-    AUX6,  // (CH10) calibrate Y (V2x2)
-    AUX7,  // (CH11) calibrate X (V2x2)
+    AUX6,  // (CH10) calibrate Y (V2x2), pitch trim (H7)
+    AUX7,  // (CH11) calibrate X (V2x2), roll trim (H7)
     AUX8,  // (CH12) Reset / Rebind
 };
 
@@ -105,8 +105,8 @@ static volatile bool ppm_ok = false;
 uint8_t packet[32];
 static bool reset=true;
 volatile uint16_t Servo_data[12];
-static uint16_t ppm[12] = {PPM_MIN,PPM_MIN,PPM_MIN,PPM_MIN,PPM_MIN,PPM_MIN,
-                           PPM_MIN,PPM_MIN,PPM_MIN,PPM_MIN,PPM_MIN,PPM_MIN,};
+static uint16_t ppm[12] = {PPM_MIN,PPM_MIN,PPM_MIN,PPM_MIN,PPM_MID,PPM_MID,
+                           PPM_MID,PPM_MID,PPM_MID,PPM_MID,PPM_MID,PPM_MID,};
 
 void setup()
 {
