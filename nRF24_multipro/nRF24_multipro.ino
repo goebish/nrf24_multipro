@@ -68,7 +68,7 @@ enum chan_order{
     AUX3,  // (CH7)  sill camera
     AUX4,  // (CH8)  video camera
     AUX5,  // (CH9)  headless
-    AUX6,  // (CH10) calibrate Y (V2x2), pitch trim (H7)
+    AUX6,  // (CH10) calibrate Y (V2x2), pitch trim (H7), RTH (Bayang)
     AUX7,  // (CH11) calibrate X (V2x2), roll trim (H7)
     AUX8,  // (CH12) Reset / Rebind
 };
@@ -82,11 +82,12 @@ enum chan_order{
 
 // supported protocols
 enum {
-    PROTO_V2X2 = 0,
-    PROTO_CG023,
-    PROTO_CX10_BLUE,
-    PROTO_CX10_GREEN,
-    PROTO_H7,
+    PROTO_V2X2 = 0,     // WLToys V2x2, JXD JD38x, JD39x
+    PROTO_CG023,        // EAchine CG023, CG032, 3D X4
+    PROTO_CX10_BLUE,    // Cheerson CX-10 green board
+    PROTO_CX10_GREEN,   // Cheerson CX-10 blue board, CX-10A (todo: add DM007 variant)
+    PROTO_H7,           // EAchine H7, MoonTop M99xx
+    PROTO_BAYANG,       // EAchine H8 mini, BayangToys X6, X7, X9, JJRC JJ850
     PROTO_END
 };
 
@@ -155,6 +156,9 @@ void loop()
         case PROTO_H7:
             timeout = process_H7();
             break;
+        case PROTO_BAYANG:
+            timeout = process_Bayang();
+            break;
     }
     // updates ppm values out of ISR
     update_ppm();
@@ -196,9 +200,13 @@ void selectProtocol()
     
     // protocol selection
     
-    // Elevator up  + Aileron left
-    if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND) 
-        current_protocol = PROTO_H7;        // EAchine H7, MT9911
+    // Elevator up + Aileron right
+    if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
+        current_protocol = PROTO_BAYANG;    // EAchine H8 mini, BayangToys X6, X7, X9, JJRC JJ850
+    
+    // Elevator up + Aileron left
+    else if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND) 
+        current_protocol = PROTO_H7;        // EAchine H7, MT99xx
     
     // Elevator up  
     else if(ppm[ELEVATOR] > PPM_MAX_COMMAND)
@@ -247,6 +255,10 @@ void init_protocol()
         case PROTO_H7:
             H7_init();
             H7_bind();
+            break;
+        case PROTO_BAYANG:
+            Bayang_init();
+            Bayang_bind();
             break;
     }
 }
