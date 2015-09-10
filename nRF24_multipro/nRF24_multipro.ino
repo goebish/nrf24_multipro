@@ -82,12 +82,12 @@ enum chan_order{
 
 // supported protocols
 enum {
-    PROTO_V2X2 = 0,     // WLToys V2x2, JXD JD38x, JD39x
+    PROTO_V2X2 = 0,     // WLToys V2x2, JXD JD38x, JD39x, JJRC H6C, Yizhan Tarantula X6 ...
     PROTO_CG023,        // EAchine CG023, CG032, 3D X4
-    PROTO_CX10_BLUE,    // Cheerson CX-10 green board
-    PROTO_CX10_GREEN,   // Cheerson CX-10 blue board, CX-10A (todo: add DM007 variant)
+    PROTO_CX10_BLUE,    // Cheerson CX-10 blue board, newer red board, CX-10A, Floureon FX-10, CX-Stars (todo: add DM007 variant)
+    PROTO_CX10_GREEN,   // Cheerson CX-10 green board
     PROTO_H7,           // EAchine H7, MoonTop M99xx
-    PROTO_BAYANG,       // EAchine H8 mini, BayangToys X6, X7, X9, JJRC JJ850
+    PROTO_BAYANG,       // EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850
     PROTO_END
 };
 
@@ -202,7 +202,7 @@ void selectProtocol()
     
     // Elevator up + Aileron right
     if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
-        current_protocol = PROTO_BAYANG;    // EAchine H8 mini, BayangToys X6, X7, X9, JJRC JJ850
+        current_protocol = PROTO_BAYANG;    // EAchine H8 mini, BayangToys X6/X7/X9, JJRC JJ850 ...
     
     // Elevator up + Aileron left
     else if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND) 
@@ -210,7 +210,7 @@ void selectProtocol()
     
     // Elevator up  
     else if(ppm[ELEVATOR] > PPM_MAX_COMMAND)
-        current_protocol = PROTO_V2X2;       // WLToys V202/252/272, JXD 385/388 ...
+        current_protocol = PROTO_V2X2;       // WLToys V202/252/272, JXD 385/388, JJRC H6C ...
         
     // Elevator down
     else if(ppm[ELEVATOR] < PPM_MIN_COMMAND) 
@@ -218,7 +218,7 @@ void selectProtocol()
     
     // Aileron right
     else if(ppm[AILERON] > PPM_MAX_COMMAND)  
-        current_protocol = PROTO_CX10_BLUE;  // Cheerson CX10(blue pcb)/CX10-A/CX11/CX12 ... 
+        current_protocol = PROTO_CX10_BLUE;  // Cheerson CX10(blue pcb, newer red pcb)/CX10-A/CX11/CX12 ... 
     
     // Aileron left
     else if(ppm[AILERON] < PPM_MIN_COMMAND)  
