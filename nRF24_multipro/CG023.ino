@@ -61,7 +61,7 @@ void CG023_init()
     NRF24L01_WriteReg(NRF24L01_01_EN_AA, 0x00);      // No Auto Acknowledgment on all data pipes
     NRF24L01_WriteReg(NRF24L01_02_EN_RXADDR, 0x01);  // Enable data pipe 0 only
     NRF24L01_SetBitrate(NRF24L01_BR_1M);             // 1Mbps
-    NRF24L01_SetPower(3);                            // maximum rf power
+    NRF24L01_SetPower(RF_POWER);
     NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);      // Disable dynamic payload length on all pipes
     NRF24L01_WriteReg(NRF24L01_1D_FEATURE, 0x00);    // Set feature bits
     

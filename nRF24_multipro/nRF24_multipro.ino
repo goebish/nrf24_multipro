@@ -56,6 +56,8 @@
 // SPI input
 #define  MISO_on (PINC & _BV(0)) // PC0
 
+#define RF_POWER 2 // 0-3, it was found that using maximum power can cause some issues, so let's use 2... 
+
 // PPM stream settings
 #define CHANNELS 12 // number of channels in ppm stream, 12 ideally
 enum chan_order{
@@ -88,6 +90,7 @@ enum {
     PROTO_CX10_GREEN,   // Cheerson CX-10 green board
     PROTO_H7,           // EAchine H7, MoonTop M99xx
     PROTO_BAYANG,       // EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850
+    PROTO_SYMAX5C1,     // Syma X5C-1 (not older X5C), X11, X11C, X12
     PROTO_END
 };
 
@@ -120,7 +123,7 @@ void setup()
     pinMode(CS_pin, OUTPUT);
     pinMode(CE_pin, OUTPUT);
     pinMode(MISO_pin, INPUT);
-     
+
     // PPM ISR setup
     attachInterrupt(PPM_pin - 2, ISR_ppm, CHANGE);
     TCCR1A = 0;  //reset timer1
@@ -136,7 +139,7 @@ void loop()
     // reset / rebind
     if(reset || ppm[AUX8] > PPM_MAX_COMMAND) {
         reset = false;
-        selectProtocol();
+        selectProtocol();        
         NRF24L01_Reset();
         NRF24L01_Initialize();
         init_protocol();
@@ -158,6 +161,9 @@ void loop()
             break;
         case PROTO_BAYANG:
             timeout = process_Bayang();
+            break;
+        case PROTO_SYMAX5C1:
+            timeout = process_SymaX();
             break;
     }
     // updates ppm values out of ISR
@@ -200,8 +206,12 @@ void selectProtocol()
     
     // protocol selection
     
+    // Elevator down + Aileron left
+    if(ppm[ELEVATOR] < PPM_MIN_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND)
+        current_protocol = PROTO_SYMAX5C1; // Syma X5C-1, X11, X11C, X12
+    
     // Elevator up + Aileron right
-    if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
+    else if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
         current_protocol = PROTO_BAYANG;    // EAchine H8 mini, BayangToys X6/X7/X9, JJRC JJ850 ...
     
     // Elevator up + Aileron left
@@ -259,6 +269,10 @@ void init_protocol()
         case PROTO_BAYANG:
             Bayang_init();
             Bayang_bind();
+            break;
+        case PROTO_SYMAX5C1:
+            Symax_init();
+            SymaX_bind();
             break;
     }
 }

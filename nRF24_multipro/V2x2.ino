@@ -72,7 +72,7 @@ static void V2x2_init()
     NRF24L01_WriteReg(NRF24L01_04_SETUP_RETR, 0xFF); // 4ms retransmit t/o, 15 tries
     NRF24L01_WriteReg(NRF24L01_05_RF_CH, 0x08);      // Channel 8
     NRF24L01_SetBitrate(NRF24L01_BR_1M);
-    NRF24L01_SetPower(3);
+    NRF24L01_SetPower(RF_POWER);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);     // Clear data ready, data sent, and retransmit
     NRF24L01_WriteReg(NRF24L01_0C_RX_ADDR_P2, 0xC3); // LSB byte of pipe 2 receive address
     NRF24L01_WriteReg(NRF24L01_0D_RX_ADDR_P3, 0xC4);

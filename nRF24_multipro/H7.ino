@@ -75,7 +75,7 @@ void H7_init()
     NRF24L01_WriteReg(NRF24L01_04_SETUP_RETR, 0x00);// no auto retransmit
     NRF24L01_WriteReg(NRF24L01_11_RX_PW_P0, 0x09);  // rx payload size (unused ?)
     NRF24L01_SetBitrate(NRF24L01_BR_1M);            // 1Mbps
-    NRF24L01_SetPower(3);                           // maximum rf power
+    NRF24L01_SetPower(RF_POWER);
     NRF24L01_Activate(0x73);
     NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);
     NRF24L01_WriteReg(NRF24L01_1D_FEATURE, 0x00);
