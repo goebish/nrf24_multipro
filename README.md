@@ -1,7 +1,7 @@
 # nrf24-multipro
 nRF24L01 multi-protocol RC transmitter
 
-![Image]\(http://i.imgur.com/AeMJKzT.jpg) 
+http://i.imgur.com/AeMJKzT.jpg 
 
 Create a model in OpenTX using external module in PPM mode, 12 channels and TAER sequence order.
 
