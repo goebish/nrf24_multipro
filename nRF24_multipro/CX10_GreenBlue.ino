@@ -146,10 +146,10 @@ void CX10_Write_Packet(uint8_t init)
     packet[8+offset]= highByte(3000-ppm[ELEVATOR]);
     packet[9+offset]= lowByte(ppm[THROTTLE]);
     packet[10+offset]= highByte(ppm[THROTTLE]);
-    if(ppm[AUX2] > PPM_MID)
-        packet[10+offset] |= 0x10; // flip flag
     packet[11+offset]= lowByte(ppm[RUDDER]);
     packet[12+offset]= highByte(ppm[RUDDER]);
+    if(ppm[AUX2] > PPM_MID)
+        packet[12+offset] |= 0x10; // flip flag
     // rate / mode (use headless channel)
     if(ppm[AUX1] > PPM_MAX_COMMAND) // mode 3 / headless
         packet[13+offset] = 0x02;
