@@ -148,6 +148,7 @@ void loop()
     // process protocol
     switch(current_protocol) {
         case PROTO_CG023:
+        case PROTO_YD829:
             timeout = process_CG023();
             break;
         case PROTO_V2X2:
@@ -255,6 +256,7 @@ void init_protocol()
 {
     switch(current_protocol) {
         case PROTO_CG023:
+        case PROTO_YD829:
             CG023_init();
             CG023_bind();
             break;
