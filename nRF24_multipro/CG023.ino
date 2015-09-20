@@ -128,28 +128,28 @@ void CG023_WritePacket(uint8_t init)
     switch(current_protocol) {
         case PROTO_CG023:
             packet[13] = CG023_RATE_100; // 100% rate
-            if(ppm[AUX1]>PPM_MID)
+            if(ppm[AUX1]>PPM_MAX_COMMAND)
                 packet[13] |= CG023_LED_OFF;
-            if(ppm[AUX2]>PPM_MID)
+            if(ppm[AUX2]>PPM_MAX_COMMAND)
                 packet[13] |= CG023_FLIP;
-            if(ppm[AUX3]>PPM_MID)
+            if(ppm[AUX3]>PPM_MAX_COMMAND)
                 packet[13] |= CG023_STILL;
-            if(ppm[AUX4]>PPM_MID)
+            if(ppm[AUX4]>PPM_MAX_COMMAND)
                 packet[13] |= CG023_VIDEO;
-            if(ppm[AUX5]>PPM_MID)
+            if(ppm[AUX5]>PPM_MAX_COMMAND)
                 packet[13] |= CG023_EASY;
             break;
         case PROTO_YD829:
             packet[13] = YD_FLAG_RATE_HIGH;
             // reverse aileron direction
             packet[8] = 0xFE - packet[8];
-            if(ppm[AUX2] > 0)
+            if(ppm[AUX2] > PPM_MAX_COMMAND)
                 packet[13] |= YD_FLAG_FLIP;
-            if(ppm[AUX3] > 0)
+            if(ppm[AUX3] > PPM_MAX_COMMAND)
                 packet[13] |= YD_FLAG_STILL;
-            if(ppm[AUX4] > 0)
+            if(ppm[AUX4] > PPM_MAX_COMMAND)
                 packet[13] |= YD_FLAG_VIDEO;
-            if(ppm[AUX5] > 0)
+            if(ppm[AUX5] > PPM_MAX_COMMAND)
                 packet[13] |= YD_FLAG_HEADLESS;
             break;
     }
