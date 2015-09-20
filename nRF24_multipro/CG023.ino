@@ -18,6 +18,7 @@
 #define CG023_PAYLOAD_SIZE 15
 #define CG023_PACKET_PERIOD 8200 // interval of time between start of 2 packets, in us
 #define CG023_RF_BIND_CHANNEL 0x2D
+#define YD829_PACKET_PERIOD  4100
 
 enum CG023_FLAGS{
     // flags going to packet[13]
@@ -30,12 +31,24 @@ enum CG023_FLAGS{
     CG023_RATE_100= 0x40,
 };
 
+enum{
+    // flags going to packet[13] (YD-829)
+    YD_FLAG_FLIP     = 0x01,
+    YD_MASK_RATE     = 0x0C,
+    YD_FLAG_RATE_MID = 0x04,
+    YD_FLAG_RATE_HIGH= 0x08,
+    YD_FLAG_HEADLESS = 0x20,
+    YD_FLAG_VIDEO    = 0x40, 
+    YD_FLAG_STILL    = 0x80,
+};
+
 static uint16_t CG023_txid[2];
 static uint8_t CG023_rf_data_channel;
+static uint16_t cg_packet_period;
 
 uint32_t process_CG023()
 {
-    uint32_t nextPacket = micros()+CG023_PACKET_PERIOD;
+    uint32_t nextPacket = micros()+cg_packet_period;
     XN297_Configure(_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP));
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);     // Clear data ready, data sent, and retransmit
     NRF24L01_FlushTx();
@@ -46,6 +59,14 @@ uint32_t process_CG023()
 
 void CG023_init()
 {
+    switch(current_protocol) {
+        case PROTO_YD829:
+            cg_packet_period = YD829_PACKET_PERIOD;
+            break;
+        case PROTO_CG023:
+            cg_packet_period = CG023_PACKET_PERIOD;
+            break;
+    }
     const uint8_t tx_addr[] = {0x26, 0xA8, 0x67, 0x35, 0xCC};
     CG023_txid[0] = (transmitterID[0] % 40) | 0x80; // [0x80;0xBF]
     CG023_txid[1] = transmitterID[1];
@@ -78,7 +99,7 @@ void CG023_bind()
         NRF24L01_WriteReg(NRF24L01_05_RF_CH, CG023_RF_BIND_CHANNEL); // Set radio frequency
         CG023_WritePacket(0xAA); // send bind packet
         digitalWrite(ledPin, bitRead(counter,3)); //check for 0bxxxx1xxx to flash LED
-        delayMicroseconds(CG023_PACKET_PERIOD);
+        delayMicroseconds(cg_packet_period);
     }
     digitalWrite(ledPin, HIGH); // LED on at end of bind
 }
@@ -103,17 +124,35 @@ void CG023_WritePacket(uint8_t init)
     packet[10] = 0x20; // rudder trim, neutral = 0x20
     packet[11] = 0x40; // elevator trim, neutral = 0x40
     packet[12] = 0x40; // aileron trim, neutral = 0x40
-    packet[13] = CG023_RATE_100; // 100% rate
-    if(ppm[AUX1]>PPM_MID)
-        packet[13] |= CG023_LED_OFF;
-    if(ppm[AUX2]>PPM_MID)
-        packet[13] |= CG023_FLIP;
-    if(ppm[AUX3]>PPM_MID)
-        packet[13] |= CG023_STILL;
-    if(ppm[AUX4]>PPM_MID)
-        packet[13] |= CG023_VIDEO;
-    if(ppm[AUX5]>PPM_MID)
-        packet[13] |= CG023_EASY;
+    
+    switch(current_protocol) {
+        case PROTO_CG023:
+            packet[13] = CG023_RATE_100; // 100% rate
+            if(ppm[AUX1]>PPM_MID)
+                packet[13] |= CG023_LED_OFF;
+            if(ppm[AUX2]>PPM_MID)
+                packet[13] |= CG023_FLIP;
+            if(ppm[AUX3]>PPM_MID)
+                packet[13] |= CG023_STILL;
+            if(ppm[AUX4]>PPM_MID)
+                packet[13] |= CG023_VIDEO;
+            if(ppm[AUX5]>PPM_MID)
+                packet[13] |= CG023_EASY;
+            break;
+        case PROTO_YD829:
+            packet[13] = YD_FLAG_RATE_HIGH;
+            // reverse aileron direction
+            packet[8] = 0xFE - packet[8];
+            if(ppm[AUX2] > 0)
+                packet[13] |= YD_FLAG_FLIP;
+            if(ppm[AUX3] > 0)
+                packet[13] |= YD_FLAG_STILL;
+            if(ppm[AUX4] > 0)
+                packet[13] |= YD_FLAG_VIDEO;
+            if(ppm[AUX5] > 0)
+                packet[13] |= YD_FLAG_HEADLESS;
+            break;
+    }
     packet[14] = 0x00;
     XN297_WritePayload(packet, CG023_PAYLOAD_SIZE);
 }

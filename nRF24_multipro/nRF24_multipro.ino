@@ -91,6 +91,7 @@ enum {
     PROTO_H7,           // EAchine H7, MoonTop M99xx
     PROTO_BAYANG,       // EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850
     PROTO_SYMAX5C1,     // Syma X5C-1 (not older X5C), X11, X11C, X12
+    PROTO_YD829,        // YD-829, YD-829C, YD-822 ...
     PROTO_END
 };
 
@@ -206,8 +207,12 @@ void selectProtocol()
     
     // protocol selection
     
+    // Elevator down + Aileron right
+    if(ppm[ELEVATOR] < PPM_MIN_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
+        current_protocol = PROTO_YD829; // YD-829, YD-829C, YD-822 ...
+    
     // Elevator down + Aileron left
-    if(ppm[ELEVATOR] < PPM_MIN_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND)
+    else if(ppm[ELEVATOR] < PPM_MIN_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND)
         current_protocol = PROTO_SYMAX5C1; // Syma X5C-1, X11, X11C, X12
     
     // Elevator up + Aileron right
