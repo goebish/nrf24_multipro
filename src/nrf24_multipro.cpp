@@ -154,6 +154,21 @@ uint16_t nrf24_multipro::getChannel(t_channelOrder ch) {
 /**
  *
  * @param ch t_channelOrder
+ * @param out_min
+ * @param out_max
+ * @return channel value after map
+ */
+long nrf24_multipro::getChannel(t_channelOrder ch, long out_min, long out_max) {
+    if(ch < CH_MAX_CONTROL) {
+        return map(ppm[ch], PPM_MIN, PPM_MAX, out_min, out_max);
+    }
+    return out_min;
+}
+
+
+/**
+ *
+ * @param ch t_channelOrder
  * @return true if channel value is > PPM_MAX_COMMAND
  */
 bool nrf24_multipro::getChannelIsCMD(t_channelOrder ch) {
@@ -161,6 +176,22 @@ bool nrf24_multipro::getChannelIsCMD(t_channelOrder ch) {
         return (ppm[ch] > PPM_MAX_COMMAND);
     }
     return false;
+}
+
+/**
+ *
+ * @param ch
+ * @return -1 < PPM_MIN_COMMAND   1 > PPM_MAX_COMMAND  or  0
+ */
+int8_t nrf24_multipro::getChannel3way(t_channelOrder ch) {
+    if(ch < CH_MAX_CONTROL) {
+        if(ppm[ch] < PPM_MIN_COMMAND) {
+            return -1;
+        } else if(ppm[ch] > PPM_MAX_COMMAND) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 /**

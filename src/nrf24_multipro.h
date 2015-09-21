@@ -104,7 +104,11 @@ class nrf24_multipro {
         void setChannelNum(uint8_t num);
 
         uint16_t getChannel(t_channelOrder ch);
+        long getChannel(t_channelOrder ch, long out_min, long out_max);
+
         bool getChannelIsCMD(t_channelOrder ch);
+        int8_t getChannel3way(t_channelOrder ch);
+
         void setChannel(t_channelOrder ch, uint16_t value);
 
 
