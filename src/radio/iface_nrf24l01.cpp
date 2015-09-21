@@ -13,7 +13,25 @@
  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "iface_nrf24l01.h"
+#include "nrf24_multipro.h"
+#include "SPIapi.h"
+
 static uint8_t rf_setup;
+
+static uint8_t Strobe(uint8_t state);
+
+
+
+static uint8_t Strobe(uint8_t state)
+{
+    uint8_t result;
+    CS_off;
+    result = spi_write(state);
+    CS_on;
+    return result;
+}
+
 
 uint8_t NRF24L01_WriteReg(uint8_t address, uint8_t data)
 {
@@ -49,14 +67,6 @@ uint8_t NRF24L01_FlushRx()
     return Strobe(FLUSH_RX);
 }
 
-static uint8_t Strobe(uint8_t state)
-{
-    uint8_t result;
-    CS_off;
-    result = spi_write(state);
-    CS_on;
-    return result;
-}
 
 uint8_t NRF24L01_WritePayload(uint8_t *data, uint8_t length)
 {

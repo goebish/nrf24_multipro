@@ -91,11 +91,11 @@ enum {
     NRF24L01_BR_RSVD
 };
 
-enum TXRX_State {
+typedef enum TXRX_State {
     TXRX_OFF,
     TX_EN,
     RX_EN,
-};
+} t_TXRX_State;
 
 /* Instruction Mnemonics */
 #define R_REGISTER    0x00
@@ -110,5 +110,21 @@ enum TXRX_State {
 #define FLUSH_RX      0xE2
 #define REUSE_TX_PL   0xE3
 #define NOP           0xFF 
+
+
+
+uint8_t NRF24L01_WriteReg(uint8_t address, uint8_t data);
+void NRF24L01_WriteRegisterMulti(uint8_t address, const uint8_t data[], uint8_t len);
+void NRF24L01_Initialize();
+uint8_t NRF24L01_FlushTx();
+uint8_t NRF24L01_FlushRx();
+uint8_t NRF24L01_WritePayload(uint8_t *data, uint8_t length);
+uint8_t NRF24L01_ReadPayload(uint8_t *data, uint8_t length);
+uint8_t NRF24L01_ReadReg(uint8_t reg);
+uint8_t NRF24L01_Activate(uint8_t code);
+void NRF24L01_SetTxRxMode(t_TXRX_State mode);
+uint8_t NRF24L01_Reset();
+uint8_t NRF24L01_SetPower(uint8_t power);
+uint8_t NRF24L01_SetBitrate(uint8_t bitrate);
 
 #endif

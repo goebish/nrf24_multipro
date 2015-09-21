@@ -13,32 +13,33 @@
  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BAYANG_BIND_COUNT       1000
-#define BAYANG_PACKET_PERIOD    2000
-#define BAYANG_PACKET_SIZE      15
-#define BAYANG_RF_NUM_CHANNELS  4
-#define BAYANG_RF_BIND_CHANNEL  0
-#define BAYANG_ADDRESS_LENGTH   5
+#include <Arduino.h>
+#include "nrf24_multipro.h"
+#include "protocol.h"
+#include "Bayang.h"
 
 static uint8_t Bayang_rf_chan;
 static uint8_t Bayang_rf_channels[BAYANG_RF_NUM_CHANNELS] = {0,};
 static uint8_t Bayang_rx_tx_addr[BAYANG_ADDRESS_LENGTH];
 
 enum{
-    // flags going to packet[2]
+    // flags going to Ppacket[2]
     BAYANG_FLAG_RTH      = 0x01,
     BAYANG_FLAG_HEADLESS = 0x02,
     BAYANG_FLAG_FLIP     = 0x08,
 };
 
-uint32_t process_Bayang()
+
+static void send_packet(u8 bind);
+
+uint32_t protBAYANG::loop()
 {
     uint32_t timeout = micros() + BAYANG_PACKET_PERIOD;
     send_packet(0);
     return timeout;
 }
 
-void Bayang_init()
+void protBAYANG::init()
 {
     uint8_t i;
     const u8 bind_address[] = {0,0,0,0,0};
@@ -67,7 +68,7 @@ void Bayang_init()
     delay(150);
 }
 
-void Bayang_bind()
+void protBAYANG::bind()
 {
     uint16_t counter = BAYANG_BIND_COUNT;
     while(counter) {
@@ -80,7 +81,7 @@ void Bayang_bind()
 }
 
 #define DYNTRIM(chval) ((u8)((chval >> 2) & 0xfc))
-#define GET_FLAG(ch, mask) (ppm[ch] > PPM_MAX_COMMAND ? mask : 0)
+#define GET_FLAG(ch, mask) (multipro.getChannel(ch) > PPM_MAX_COMMAND ? mask : 0)
 
 static void send_packet(u8 bind)
 {
@@ -93,36 +94,36 @@ static void send_packet(u8 bind)
     } chanval;
 
     if (bind) {
-        packet[0] = 0xa4;
-        memcpy(&packet[1], Bayang_rx_tx_addr, 5);
-        memcpy(&packet[6], Bayang_rf_channels, 4);
-        packet[10] = transmitterID[0];
-        packet[11] = transmitterID[1];
+        Ppacket[0] = 0xa4;
+        memcpy(&Ppacket[1], Bayang_rx_tx_addr, 5);
+        memcpy(&Ppacket[6], Bayang_rf_channels, 4);
+        Ppacket[10] = transmitterID[0];
+        Ppacket[11] = transmitterID[1];
     } else {
-        packet[0] = 0xa5;
-        packet[1] = 0xfa;   // normal mode is 0xf7, expert 0xfa
-        packet[2] = GET_FLAG(AUX2, BAYANG_FLAG_FLIP)
-                  | GET_FLAG(AUX5, BAYANG_FLAG_HEADLESS)
-                  | GET_FLAG(AUX6, BAYANG_FLAG_RTH);
-        packet[3] = 0x00;
-        chanval.value = map(ppm[AILERON], PPM_MIN, PPM_MAX, 0, 0x3ff);   // aileron
-        packet[4] = chanval.bytes.msb + DYNTRIM(chanval.value);
-        packet[5] = chanval.bytes.lsb;
-        chanval.value = map(ppm[ELEVATOR], PPM_MIN, PPM_MAX, 0, 0x3ff);   // elevator
-        packet[6] = chanval.bytes.msb + DYNTRIM(chanval.value);
-        packet[7] = chanval.bytes.lsb;
-        chanval.value = map(ppm[THROTTLE], PPM_MIN, PPM_MAX, 0, 0x3ff);   // throttle
-        packet[8] = chanval.bytes.msb + 0x7c;
-        packet[9] = chanval.bytes.lsb;
-        chanval.value = map(ppm[RUDDER], PPM_MIN, PPM_MAX, 0, 0x3ff);   // rudder
-        packet[10] = chanval.bytes.msb + DYNTRIM(chanval.value);
-        packet[11] = chanval.bytes.lsb;
+        Ppacket[0] = 0xa5;
+        Ppacket[1] = 0xfa;   // normal mode is 0xf7, expert 0xfa
+        Ppacket[2] = GET_FLAG(CH_FLIP, BAYANG_FLAG_FLIP)
+                  | GET_FLAG(CH_HEADLESS, BAYANG_FLAG_HEADLESS)
+                  | GET_FLAG(CH_AUX6, BAYANG_FLAG_RTH);
+        Ppacket[3] = 0x00;
+        chanval.value = map(multipro.getChannel(CH_AILERON), PPM_MIN, PPM_MAX, 0, 0x3ff);   // aileron
+        Ppacket[4] = chanval.bytes.msb + DYNTRIM(chanval.value);
+        Ppacket[5] = chanval.bytes.lsb;
+        chanval.value = map(multipro.getChannel(CH_ELEVATOR), PPM_MIN, PPM_MAX, 0, 0x3ff);   // elevator
+        Ppacket[6] = chanval.bytes.msb + DYNTRIM(chanval.value);
+        Ppacket[7] = chanval.bytes.lsb;
+        chanval.value = map(multipro.getChannel(CH_THROTTLE), PPM_MIN, PPM_MAX, 0, 0x3ff);   // throttle
+        Ppacket[8] = chanval.bytes.msb + 0x7c;
+        Ppacket[9] = chanval.bytes.lsb;
+        chanval.value = map(multipro.getChannel(CH_RUDDER), PPM_MIN, PPM_MAX, 0, 0x3ff);   // rudder
+        Ppacket[10] = chanval.bytes.msb + DYNTRIM(chanval.value);
+        Ppacket[11] = chanval.bytes.lsb;
     }
-    packet[12] = transmitterID[2];
-    packet[13] = 0x0a;
-    packet[14] = 0;
+    Ppacket[12] = transmitterID[2];
+    Ppacket[13] = 0x0a;
+    Ppacket[14] = 0;
     for(uint8_t i=0; i<BAYANG_PACKET_SIZE-1; i++) {
-        packet[14] += packet[i];
+        Ppacket[14] += Ppacket[i];
     }
     
     XN297_Configure(_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP));
@@ -130,5 +131,5 @@ static void send_packet(u8 bind)
     Bayang_rf_chan %= sizeof(Bayang_rf_channels);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);
     NRF24L01_FlushTx();
-    XN297_WritePayload(packet, BAYANG_PACKET_SIZE);
+    XN297_WritePayload(Ppacket, BAYANG_PACKET_SIZE);
 }

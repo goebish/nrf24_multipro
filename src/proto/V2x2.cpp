@@ -13,6 +13,11 @@
  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <Arduino.h>
+#include "nrf24_multipro.h"
+#include "protocol.h"
+#include "V2x2.h"
+
 enum {
     // flags going to byte 14
     V2x2_FLAG_CAMERA = 0x01, // also automatic Missile Launcher and Hoist in one direction
@@ -28,10 +33,6 @@ enum {
     V2x2_FLAG_MAG_CAL_Y = 0x2000
 };
 
-#define V2x2_PAYLOADSIZE 16
-#define V2x2_BIND_COUNT 1000
-// Timeout for callback in uSec, 4ms=4000us for V202
-#define V2x2_PACKET_PERIOD 4000
 
 static uint8_t V2x2_tx_id[3];
 static uint8_t V2x2_rf_ch_num;
@@ -57,7 +58,15 @@ static const uint8_t V2x2_freq_hopping[][16] = {
 };
 static uint8_t V2x2_rf_channels[16];
 
-static void V2x2_init()
+
+static void V2x2_send_packet(uint8_t bind);
+static uint8_t V2x2_convert_channel(t_channelOrder num);
+static void V2x2_set_flags(uint16_t* flags);
+static void V2x2_add_pkt_checksum();
+static void V2x2_set_tx_id();
+
+
+void protV2x2::init(void)
 {
     V2x2_set_tx_id();
     CE_off;
@@ -100,7 +109,7 @@ static void V2x2_init()
     delay(150);
 }
 
-void V2x2_bind()
+void protV2x2::bind(void)
 {
     uint16_t counter=1000;
     while(counter--) {
@@ -112,7 +121,7 @@ void V2x2_bind()
     digitalWrite(ledPin, HIGH); // LED on at end of bind  
 }
 
-uint32_t process_V2x2()
+uint32_t protV2x2::loop(void)
 {
     uint32_t nextPacket = micros() + V2x2_PACKET_PERIOD;
     V2x2_send_packet(0);
@@ -140,84 +149,85 @@ static void V2x2_set_tx_id()
 static void V2x2_add_pkt_checksum()
 {
     uint8_t sum = 0;
-    for (uint8_t i = 0; i < 15;  ++i) sum += packet[i];
-    packet[15] = sum;
+    for (uint8_t i = 0; i < 15;  ++i) sum += Ppacket[i];
+    Ppacket[15] = sum;
 }
 
 static void V2x2_set_flags(uint16_t* flags)
 {
-    int num_channels = CHANNELS;
+    uint8_t num_channels = multipro.getChannelNum();
+
     // Channel 5
-    if (ppm[AUX2] <= PPM_MID) *flags &= ~V2x2_FLAG_LED;
+    if (multipro.getChannel(CH_FLIP) <= PPM_MID) *flags &= ~V2x2_FLAG_LED;
     else *flags |= V2x2_FLAG_LED;
     
     // Channel 6
-    if (ppm[AUX2] <= PPM_MID) *flags &= ~V2x2_FLAG_FLIP;
+    if (multipro.getChannel(CH_FLIP) <= PPM_MID) *flags &= ~V2x2_FLAG_FLIP;
     else *flags |= V2x2_FLAG_FLIP;
 
     // Channel 7
-    if (num_channels < 7 || ppm[AUX3] <= PPM_MID) *flags &= ~V2x2_FLAG_CAMERA;
+    if (num_channels < 7 || multipro.getChannel(CH_PIC) <= PPM_MID) *flags &= ~V2x2_FLAG_CAMERA;
     else *flags |= V2x2_FLAG_CAMERA;
 
     // Channel 8
-    if (num_channels < 8 || ppm[AUX4] <= PPM_MID) *flags &= ~V2x2_FLAG_VIDEO;
+    if (num_channels < 8 || multipro.getChannel(CH_CAM) <= PPM_MID) *flags &= ~V2x2_FLAG_VIDEO;
     else *flags |= V2x2_FLAG_VIDEO;
 
     // Channel 9
-    if (num_channels < 9 || ppm[AUX5] <= PPM_MID) *flags &= ~V2x2_FLAG_HEADLESS;
+    if (num_channels < 9 || multipro.getChannel(CH_HEADLESS) <= PPM_MID) *flags &= ~V2x2_FLAG_HEADLESS;
     else *flags |= V2x2_FLAG_HEADLESS;
 
     // Channel 10
-    if (num_channels < 10 || ppm[AUX6] <= PPM_MID) *flags &= ~V2x2_FLAG_MAG_CAL_X;
+    if (num_channels < 10 || multipro.getChannel(CH_AUX6) <= PPM_MID) *flags &= ~V2x2_FLAG_MAG_CAL_X;
     else *flags |= V2x2_FLAG_MAG_CAL_X;
 
     // Channel 11
-    if (num_channels < 11 || ppm[AUX7] <= PPM_MID) *flags &= ~V2x2_FLAG_MAG_CAL_Y;
+    if (num_channels < 11 || multipro.getChannel(CH_AUX7) <= PPM_MID) *flags &= ~V2x2_FLAG_MAG_CAL_Y;
     else *flags |= V2x2_FLAG_MAG_CAL_Y;
 }
 
-static uint8_t V2x2_convert_channel(uint8_t num)
+static uint8_t V2x2_convert_channel(t_channelOrder num)
 {
-    if(ppm[num]<PPM_MID)
-        return map(ppm[num],PPM_MIN,PPM_MID,0x7F,0x00);
+    if(multipro.getChannel(num)<PPM_MID)
+        return map(multipro.getChannel(num),PPM_MIN,PPM_MID,0x7F,0x00);
     else
-        return map(ppm[num],PPM_MID,PPM_MAX,0x80,0xFF);
+        return map(multipro.getChannel(num),PPM_MID,PPM_MAX,0x80,0xFF);
 }
 
 static void V2x2_send_packet(uint8_t bind)
 {
     if (bind) {
         V2x2_flags     = V2x2_FLAG_BIND;
-        packet[0] = 0;
-        packet[1] = 0;
-        packet[2] = 0;
-        packet[3] = 0;
-        packet[4] = 0;
-        packet[5] = 0;
-        packet[6] = 0;
+        Ppacket[0] = 0;
+        Ppacket[1] = 0;
+        Ppacket[2] = 0;
+        Ppacket[3] = 0;
+        Ppacket[4] = 0;
+        Ppacket[5] = 0;
+        Ppacket[6] = 0;
     } else {
         // regular packet
         V2x2_set_flags(&V2x2_flags);
-        packet[0] = map(ppm[THROTTLE],PPM_MIN,PPM_MAX,0,255); // 0 - 255
-        packet[1] = V2x2_convert_channel(RUDDER); // 7f - [00 - 80] - ff
-        packet[2] = V2x2_convert_channel(ELEVATOR); // 7f - [00 - 80] - ff
-        packet[3] = V2x2_convert_channel(AILERON); // 7f - [00 - 80] - ff
+        Ppacket[0] = map(multipro.getChannel(CH_THROTTLE),PPM_MIN,PPM_MAX,0,255); // 0 - 255
+        Ppacket[1] = V2x2_convert_channel(CH_RUDDER); // 7f - [00 - 80] - ff
+        Ppacket[2] = V2x2_convert_channel(CH_ELEVATOR); // 7f - [00 - 80] - ff
+        Ppacket[3] = V2x2_convert_channel(CH_AILERON); // 7f - [00 - 80] - ff
         // Trims, middle is 0x40, TODO: try dynamic trims, maybe faster yaw on v272 ?
-        packet[4] = 0x40; // yaw
-        packet[5] = 0x40; // pitch
-        packet[6] = 0x40; // roll
+        Ppacket[4] = 0x40; // yaw
+        Ppacket[5] = 0x40; // pitch
+        Ppacket[6] = 0x40; // roll
     }
     // TX id
-    packet[7] = V2x2_tx_id[0];
-    packet[8] = V2x2_tx_id[1];
-    packet[9] = V2x2_tx_id[2];
+    Ppacket[7] = V2x2_tx_id[0];
+    Ppacket[8] = V2x2_tx_id[1];
+    Ppacket[9] = V2x2_tx_id[2];
     // empty
-    packet[10] = V2x2_flags >> 8;
-    packet[11] = 0x00;
-    packet[12] = 0x00;
-    packet[13] = 0x00;
+    Ppacket[10] = V2x2_flags >> 8;
+    Ppacket[11] = 0x00;
+    Ppacket[12] = 0x00;
+    Ppacket[13] = 0x00;
     //
-    packet[14] = V2x2_flags & 0xff;
+    Ppacket[14] = V2x2_flags & 0xff;
     V2x2_add_pkt_checksum();
 
     // Each packet is repeated twice on the same
@@ -232,7 +242,7 @@ static void V2x2_send_packet(uint8_t bind)
     V2x2_rf_ch_num = (V2x2_rf_ch_num + 1) & 0x1F;
     NRF24L01_WriteReg(NRF24L01_05_RF_CH, rf_ch);
     NRF24L01_FlushTx();
-    NRF24L01_WritePayload(packet, V2x2_PAYLOADSIZE);
+    NRF24L01_WritePayload(Ppacket, V2x2_PAYLOADSIZE);
     delayMicroseconds(15);
 }
 

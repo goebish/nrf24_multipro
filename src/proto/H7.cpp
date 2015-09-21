@@ -23,6 +23,11 @@
 // CH10: elevator trim
 // CH11: aileron trim
 
+#include <Arduino.h>
+#include "nrf24_multipro.h"
+#include "protocol.h"
+#include "H7.h"
+
 static const uint8_t H7_freq[] = {
     0x02, 0x48, 0x0C, 0x3e, 0x16, 0x34, 0x20, 0x2A,
     0x2A, 0x20, 0x34, 0x16, 0x3e, 0x0c, 0x48, 0x02
@@ -34,7 +39,7 @@ static const uint8_t H7_mys_byte[] = {
 };
 
 enum {
-    // flags going to packet[6]
+    // flags going to Ppacket[6]
     // H7_FLAG_RATE0, // default rate, no flag
     H7_FLAG_RATE1   = 0x01,
     H7_FLAG_RATE2   = 0x02,
@@ -48,16 +53,13 @@ uint8_t H7_tx_addr[5];
 uint8_t checksum_offset;
 uint8_t channel_offset;
 
-#define H7_PACKET_PERIOD 2625
-#define H7_PAYPLOAD_SIZE 9
-
 void H7_initTXID()
 {
     checksum_offset = (transmitterID[0] + transmitterID[1]) & 0xff;
     channel_offset = (((checksum_offset & 0xf0)>>4) + (checksum_offset & 0x0f)) % 8;
 }
 
-void H7_init()
+void protH7::init()
 {
     H7_initTXID();
     NRF24L01_Reset();
@@ -85,25 +87,25 @@ void H7_init()
     delay(100);
 }
 
-void H7_bind()
+void protH7::bind()
 {
     uint8_t counter = 58;
-    packet[0] = 0x20; // fixed (firmware date 2014-03-25 ?)
-    packet[1] = 0x14; // fixed
-    packet[2] = 0x03; // fixed
-    packet[3] = 0x25; // fixed
-    packet[4] = transmitterID[0]; // 1st byte for data phase tx address  
-    packet[5] = transmitterID[1]; // 2nd byte for data phase tx address 
-    packet[6] = 0x00; // 3rd byte for data phase tx address (always 0x00 ?)
-    packet[7] = checksum_offset; // checksum offset
-    packet[8] = 0xAA; // fixed
+    Ppacket[0] = 0x20; // fixed (firmware date 2014-03-25 ?)
+    Ppacket[1] = 0x14; // fixed
+    Ppacket[2] = 0x03; // fixed
+    Ppacket[3] = 0x25; // fixed
+    Ppacket[4] = transmitterID[0]; // 1st byte for data phase tx address
+    Ppacket[5] = transmitterID[1]; // 2nd byte for data phase tx address
+    Ppacket[6] = 0x00; // 3rd byte for data phase tx address (always 0x00 ?)
+    Ppacket[7] = checksum_offset; // checksum offset
+    Ppacket[8] = 0xAA; // fixed
     while(counter--) {
         for (uint8_t ch = 0; ch < 16; ch++) {
             delayMicroseconds(5);
             NRF24L01_WriteReg(NRF24L01_07_STATUS,0x70);
             NRF24L01_FlushTx();
             NRF24L01_WriteReg(NRF24L01_05_RF_CH,H7_freq[ch]);
-            XN297_WritePayload(packet, H7_PAYPLOAD_SIZE); //(bind packet)
+            XN297_WritePayload(Ppacket, H7_PAYPLOAD_SIZE); //(bind packet)
             delayMicroseconds(H7_PACKET_PERIOD);
             digitalWrite(ledPin, bitRead(counter,3));
         }
@@ -119,48 +121,48 @@ void H7_bind()
 uint8_t H7_calcChecksum() {
     uint8_t result=checksum_offset;
     for(uint8_t i=0; i<8; i++)
-        result += packet[i];
+        result += Ppacket[i];
     return result & 0xFF;
 }
 
 void H7_WritePacket()
 {
     static uint8_t channel=0;
-    packet[0] = map(ppm[THROTTLE], PPM_MIN, PPM_MAX, 0xE1, 0x00);
-    packet[1] = map(ppm[RUDDER], PPM_MIN, PPM_MAX, 0xE1, 0x00);
-    packet[2] = map(ppm[AILERON], PPM_MIN, PPM_MAX, 0x00, 0xE1);
-    packet[3] = map(ppm[ELEVATOR], PPM_MIN, PPM_MAX, 0x00, 0xE1);
-    packet[4] = map(ppm[AUX6], PPM_MIN, PPM_MAX, 0x3f, 0x00); // elevator trim 0x3f - 0x00
-    packet[5] = map(ppm[AUX7], PPM_MIN, PPM_MAX, 0x3f, 0x00); // aileron trim 0x3f - 0x00
-    packet[6] = 0x40; // flags (default is 0x00 on H7, 0x40 on MT9916 stock TX)
-    if(ppm[AUX2] > PPM_MAX_COMMAND) {
-        packet[6] |= H7_FLAG_FLIP;
+    Ppacket[0] = map(multipro.getChannel(CH_THROTTLE), PPM_MIN, PPM_MAX, 0xE1, 0x00);
+    Ppacket[1] = map(multipro.getChannel(CH_RUDDER), PPM_MIN, PPM_MAX, 0xE1, 0x00);
+    Ppacket[2] = map(multipro.getChannel(CH_AILERON), PPM_MIN, PPM_MAX, 0x00, 0xE1);
+    Ppacket[3] = map(multipro.getChannel(CH_ELEVATOR), PPM_MIN, PPM_MAX, 0x00, 0xE1);
+    Ppacket[4] = map(multipro.getChannel(CH_AUX6), PPM_MIN, PPM_MAX, 0x3f, 0x00); // elevator trim 0x3f - 0x00
+    Ppacket[5] = map(multipro.getChannel(CH_AUX7), PPM_MIN, PPM_MAX, 0x3f, 0x00); // aileron trim 0x3f - 0x00
+    Ppacket[6] = 0x40; // flags (default is 0x00 on H7, 0x40 on MT9916 stock TX)
+    if(multipro.getChannelIsCMD(CH_FLIP)) {
+        Ppacket[6] |= H7_FLAG_FLIP;
     }        
-    if(ppm[AUX1] > PPM_MAX_COMMAND) {
-        packet[6] |= H7_FLAG_RATE2; 
+    if(multipro.getChannelIsCMD(CH_AUX1)) {
+        Ppacket[6] |= H7_FLAG_RATE2;
     }        
-    else if(ppm[AUX1] > PPM_MIN_COMMAND) {
-        packet[6] |= H7_FLAG_RATE1;
+    else if(multipro.getChannel(CH_AUX1) > PPM_MIN_COMMAND) {
+        Ppacket[6] |= H7_FLAG_RATE1;
     }        
-    if(ppm[AUX3] > PPM_MAX_COMMAND) {
-        packet[6] |= H7_FLAG_SNAPSHOT;
+    if(multipro.getChannelIsCMD(CH_PIC)) {
+        Ppacket[6] |= H7_FLAG_SNAPSHOT;
     }        
-    if(ppm[AUX4] > PPM_MAX_COMMAND) {
-        packet[6] |= H7_FLAG_VIDEO;
+    if(multipro.getChannelIsCMD(CH_CAM)) {
+        Ppacket[6] |= H7_FLAG_VIDEO;
     }        
-    packet[7] = H7_mys_byte[channel]; // looks like this byte has no importance actually   
-    packet[8] = H7_calcChecksum();
+    Ppacket[7] = H7_mys_byte[channel]; // looks like this byte has no importance actually
+    Ppacket[8] = H7_calcChecksum();
     NRF24L01_WriteReg(NRF24L01_05_RF_CH, H7_freq[channel]+channel_offset);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70); 
     NRF24L01_FlushTx();
-    XN297_WritePayload(packet, H7_PAYPLOAD_SIZE);
+    XN297_WritePayload(Ppacket, H7_PAYPLOAD_SIZE);
     channel++;
     if(channel > 15) {
         channel = 0;
     }        
 }
 
-uint32_t process_H7()
+uint32_t protH7::loop()
 {
     uint32_t result = micros() + H7_PACKET_PERIOD;
     H7_WritePacket();
