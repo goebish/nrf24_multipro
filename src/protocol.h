@@ -18,7 +18,9 @@
 #ifndef PROTOCOL_H_
 #define PROTOCOL_H_
 
-extern uint8_t transmitterID[4];
+#include "radio/iface_nrf24l01.h"
+#include "radio/XN297_emu.h"
+
 extern uint8_t Ppacket[32];
 
 

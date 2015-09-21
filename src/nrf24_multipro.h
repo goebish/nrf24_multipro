@@ -19,13 +19,12 @@
 #ifndef MULTIREMOTE_H_
 #define MULTIREMOTE_H_
 
+#include "protocol.h"
+
 #define SOFTSPI
 
 #define DEBUG_MULTI(text) Serial.print(text);
 
-#include "radio/iface_nrf24l01.h"
-#include "radio/XN297_emu.h"
-#include "protocol.h"
 
 #define ledPin    13 // LED  - D13
 
@@ -38,7 +37,6 @@
 
 #define CE_pin    5  // CE   - D5
 #define CS_pin    A1 // CS   - A1
-
 
 // SPI outputs
 #ifdef SOFTSPI

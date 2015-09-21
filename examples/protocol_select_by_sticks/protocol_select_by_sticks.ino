@@ -28,6 +28,8 @@
  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/// @todo rewrite to new librarie
+
 #include <util/atomic.h>
 #include <EEPROM.h>
 #include "iface_nrf24l01.h"
