@@ -132,16 +132,24 @@ void protCX10_GREENBLUE::CX10_Write_Packet(uint8_t init) {
     Ppacket[10 + offset] = highByte(multipro.getChannel(CH_THROTTLE));
     Ppacket[11 + offset] = lowByte(multipro.getChannel(CH_RUDDER));
     Ppacket[12 + offset] = highByte(multipro.getChannel(CH_RUDDER));
-    if(multipro.getChannel(CH_FLIP) > PPM_MID)
+
+    if(multipro.getChannelIsCMD(CH_FLIP)) {
         Ppacket[12 + offset] |= 0x10; // flip flag
+    }
+
     // rate / mode (use headless channel)
-    if(multipro.getChannel(CH_AUX1) > PPM_MAX_COMMAND) // mode 3 / headless
-        Ppacket[13 + offset] = 0x02;
-    else if(multipro.getChannel(CH_AUX1) < PPM_MIN_COMMAND) // mode 1
-        Ppacket[13 + offset] = 0x00;
-    else
-        // mode 2
-        Ppacket[13 + offset] = 0x01;
+    switch(multipro.getChannel3way(CH_3WAY)) {
+        case -1:
+            Ppacket[13 + offset] = 0x00; // mode 1
+            break;
+        case 0:
+            Ppacket[13 + offset] = 0x01; // mode 2
+            break;
+        case 1:
+            Ppacket[13 + offset] = 0x02; // mode 3 / headless
+            break;
+    }
+
     Ppacket[14 + offset] = 0x00;
     XN297_WritePayload(Ppacket, CX10_packet_length);
 }

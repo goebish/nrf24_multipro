@@ -18,7 +18,6 @@
 #include "protocol.h"
 #include "SymaX.h"
 
-
 static uint32_t SYMAX_packet_counter;
 static uint8_t SYMAX_rx_tx_addr[5];
 static uint8_t SYMAX_current_chan;
@@ -153,39 +152,48 @@ static void SYMAX_build_packet(u8 bind) {
         Ppacket[7] = 0xaa;
         Ppacket[8] = 0x00;
     } else {
-        Ppacket[0] = map(multipro.getChannel(CH_THROTTLE), PPM_MIN, PPM_MAX, 0x00, 0xFF); // throttle;
-        if(multipro.getChannel(CH_ELEVATOR) < PPM_MID)
+        Ppacket[0] = multipro.getChannel(CH_THROTTLE, 0x00, 0xFF); // throttle;
+        if(multipro.getChannel(CH_ELEVATOR) < PPM_MID) {
             Ppacket[1] = map(multipro.getChannel(CH_ELEVATOR), PPM_MID, PPM_MIN, 0x80, 0xFF);
-        else
+        } else {
             Ppacket[1] = map(multipro.getChannel(CH_ELEVATOR), PPM_MID, PPM_MAX, 0x00, 0x7F);
+        }
 
-        if(multipro.getChannel(CH_RUDDER) < PPM_MID)
+        if(multipro.getChannel(CH_RUDDER) < PPM_MID) {
             Ppacket[2] = map(multipro.getChannel(CH_RUDDER), PPM_MID, PPM_MIN, 0x00, 0x7F);
-        else
+        } else {
             Ppacket[2] = map(multipro.getChannel(CH_RUDDER), PPM_MID, PPM_MAX, 0x80, 0xFF);
+        }
 
-        if(multipro.getChannel(CH_AILERON) < PPM_MID)
+        if(multipro.getChannel(CH_AILERON) < PPM_MID) {
             Ppacket[3] = map(multipro.getChannel(CH_AILERON), PPM_MID, PPM_MIN, 0x00, 0x7F);
-        else
+        } else {
             Ppacket[3] = map(multipro.getChannel(CH_AILERON), PPM_MID, PPM_MAX, 0x80, 0xFF);
+        }
 
         Ppacket[4] = 0;
-        if(multipro.getChannelIsCMD(CH_CAM))
+
+        if(multipro.getChannelIsCMD(CH_CAM)) {
             Ppacket[4] |= SYMAX_FLAG_VIDEO;
+        }
 
-        if(multipro.getChannelIsCMD(CH_PIC))
+        if(multipro.getChannelIsCMD(CH_PIC)) {
             Ppacket[4] |= SYMAX_FLAG_PICTURE;
+        }
 
+        /// todo CH_3WAY for rate ??
         // use trims to extend controls
         Ppacket[5] = (Ppacket[1] >> 2) | 0xc0;  // always high rates (bit 7 is rate control)
         Ppacket[6] = (Ppacket[2] >> 2);
         Ppacket[7] = (Ppacket[3] >> 2);
 
-        if(multipro.getChannelIsCMD(CH_FLIP))
+        if(multipro.getChannelIsCMD(CH_FLIP)) {
             Ppacket[6] |= SYMAX_FLAG_FLIP;
+        }
 
-        if(multipro.getChannelIsCMD(CH_HEADLESS))
+        if(multipro.getChannelIsCMD(CH_HEADLESS)) {
             Ppacket[7] |= SYMAX_FLAG_HEADLESS;
+        }
 
         Ppacket[8] = 0x00;
     }

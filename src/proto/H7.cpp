@@ -135,7 +135,7 @@ void H7_WritePacket() {
         Ppacket[6] |= H7_FLAG_FLIP;
     }
 
-    switch(multipro.getChannel3way(CH_AUX1)) {
+    switch(multipro.getChannel3way(CH_3WAY)) {
         case -1:
             Ppacket[6] |= H7_FLAG_RATE2;
             break;

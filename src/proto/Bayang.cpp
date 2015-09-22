@@ -81,7 +81,7 @@ void protBAYANG::bind()
 }
 
 #define DYNTRIM(chval) ((u8)((chval >> 2) & 0xfc))
-#define GET_FLAG(ch, mask) (multipro.getChannel(ch) > PPM_MAX_COMMAND ? mask : 0)
+#define GET_FLAG(ch, mask) (multipro.getChannelIsCMD(ch) ? mask : 0)
 
 static void send_packet(u8 bind)
 {
@@ -106,16 +106,16 @@ static void send_packet(u8 bind)
                   | GET_FLAG(CH_HEADLESS, BAYANG_FLAG_HEADLESS)
                   | GET_FLAG(CH_AUX6, BAYANG_FLAG_RTH);
         Ppacket[3] = 0x00;
-        chanval.value = map(multipro.getChannel(CH_AILERON), PPM_MIN, PPM_MAX, 0, 0x3ff);   // aileron
+        chanval.value = multipro.getChannel(CH_AILERON, 0, 0x3ff);   // aileron
         Ppacket[4] = chanval.bytes.msb + DYNTRIM(chanval.value);
         Ppacket[5] = chanval.bytes.lsb;
-        chanval.value = map(multipro.getChannel(CH_ELEVATOR), PPM_MIN, PPM_MAX, 0, 0x3ff);   // elevator
+        chanval.value = multipro.getChannel(CH_ELEVATOR, 0, 0x3ff);   // elevator
         Ppacket[6] = chanval.bytes.msb + DYNTRIM(chanval.value);
         Ppacket[7] = chanval.bytes.lsb;
-        chanval.value = map(multipro.getChannel(CH_THROTTLE), PPM_MIN, PPM_MAX, 0, 0x3ff);   // throttle
+        chanval.value = multipro.getChannel(CH_THROTTLE, 0, 0x3ff);   // throttle
         Ppacket[8] = chanval.bytes.msb + 0x7c;
         Ppacket[9] = chanval.bytes.lsb;
-        chanval.value = map(multipro.getChannel(CH_RUDDER), PPM_MIN, PPM_MAX, 0, 0x3ff);   // rudder
+        chanval.value = multipro.getChannel(CH_RUDDER, 0, 0x3ff);   // rudder
         Ppacket[10] = chanval.bytes.msb + DYNTRIM(chanval.value);
         Ppacket[11] = chanval.bytes.lsb;
     }

@@ -121,14 +121,14 @@ void nrf24_multipro::setProtocol(t_protocols protocol) {
 
 /**
  * get channel num
- * @return
+ * @return number of channels of Remote
  */
 uint8_t nrf24_multipro::getChannelNum(void) {
     return channel_num;
 }
 
 /**
- * sets the channel num
+ * sets the  channels from the Remote
  * @param num uint8_t
  */
 void nrf24_multipro::setChannelNum(uint8_t num) {
@@ -140,7 +140,7 @@ void nrf24_multipro::setChannelNum(uint8_t num) {
 }
 
 /**
- *
+ * get channel value
  * @param ch t_channelOrder
  * @return channel value
  */
@@ -165,9 +165,8 @@ long nrf24_multipro::getChannel(t_channelOrder ch, long out_min, long out_max) {
     return out_min;
 }
 
-
 /**
- *
+ * 2way switch decode
  * @param ch t_channelOrder
  * @return true if channel value is > PPM_MAX_COMMAND
  */
@@ -179,7 +178,7 @@ bool nrf24_multipro::getChannelIsCMD(t_channelOrder ch) {
 }
 
 /**
- *
+ * 3way switch decode
  * @param ch
  * @return -1 < PPM_MIN_COMMAND   1 > PPM_MAX_COMMAND  or  0
  */
@@ -206,7 +205,7 @@ void nrf24_multipro::setChannel(t_channelOrder ch, uint16_t value) {
 }
 
 /**
- *
+ * init NRF24 (RF)
  */
 void nrf24_multipro::initRF(void) {
 
@@ -217,7 +216,7 @@ void nrf24_multipro::initRF(void) {
 }
 
 /**
- *
+ * init Protocol
  */
 void nrf24_multipro::initProt(void) {
 
@@ -235,8 +234,9 @@ void nrf24_multipro::initProt(void) {
  */
 void nrf24_multipro::set_txid(bool renew) {
     uint8_t i;
-    for(i = 0; i < 4; i++)
+    for(i = 0; i < 4; i++) {
         transmitterID[i] = EEPROM.read(ee_TXID0 + i);
+    }
     if(renew || (transmitterID[0] == 0xFF && transmitterID[1] == 0x0FF)) {
         for(i = 0; i < 4; i++) {
             transmitterID[i] = random() & 0xFF;

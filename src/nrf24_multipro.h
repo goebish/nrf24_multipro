@@ -64,7 +64,7 @@ typedef enum {
     CH_AILERON,     //!< (CH2)
     CH_ELEVATOR,    //!< (CH3)
     CH_RUDDER,      //!< (CH4)
-    CH_AUX1,        //!< (CH5)  led light (3 pos. rate on CX-10, H7)
+    CH_3WAY,        //!< (CH5)  led light (3 pos. rate on CX-10, H7)
     CH_FLIP,        //!< (CH6)  flip control
     CH_PIC,         //!< (CH7)  sill camera
     CH_CAM,         //!< (CH8)  video camera

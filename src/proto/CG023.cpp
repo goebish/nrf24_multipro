@@ -104,15 +104,15 @@ void protCG023::CG023_WritePacket(uint8_t init) {
     Ppacket[2] = CG023_txid[1];
     Ppacket[3] = 0;
     Ppacket[4] = 0;
-    Ppacket[5] = map(multipro.getChannel(CH_THROTTLE), PPM_MIN, PPM_MAX, 0, 255); // throttle stick
+    Ppacket[5] = multipro.getChannel(CH_THROTTLE, 0, 255); // throttle stick
     if(multipro.getChannel(CH_RUDDER) < PPM_MID)
-        Ppacket[6] = map(multipro.getChannel(CH_RUDDER), PPM_MID, PPM_MIN, 0x80, 0xBC);
+        Ppacket[6] = multipro.getChannel(CH_RUDDER, 0x80, 0xBC);
     else if(multipro.getChannel(CH_RUDDER) > PPM_MID)
-        Ppacket[6] = map(multipro.getChannel(CH_RUDDER), PPM_MID, PPM_MAX, 0x00, 0x3C);
+        Ppacket[6] = multipro.getChannel(CH_RUDDER, 0x00, 0x3C);
     else
         Ppacket[6] = 0x00;
-    Ppacket[7] = map(multipro.getChannel(CH_ELEVATOR), PPM_MIN, PPM_MAX, 0xBB, 0x43); // elevator stick 0xBB - 0x7F - 0x43
-    Ppacket[8] = map(multipro.getChannel(CH_AILERON), PPM_MIN, PPM_MAX, 0xBB, 0x43); // aileron stick 0xBB - 0x7F - 0x43
+    Ppacket[7] = multipro.getChannel(CH_ELEVATOR, 0xBB, 0x43); // elevator stick 0xBB - 0x7F - 0x43
+    Ppacket[8] = multipro.getChannel(CH_AILERON, 0xBB, 0x43); // aileron stick 0xBB - 0x7F - 0x43
     Ppacket[9] = 0x20; // throttle trim, neutral = 0x20
     Ppacket[10] = 0x20; // rudder trim, neutral = 0x20
     Ppacket[11] = 0x40; // elevator trim, neutral = 0x40
@@ -120,7 +120,7 @@ void protCG023::CG023_WritePacket(uint8_t init) {
     switch(version) {
         case PROTO_CG023:
             Ppacket[13] = CG023_RATE_100; // 100% rate
-            if(multipro.getChannelIsCMD(CH_AUX1))
+            if(multipro.getChannelIsCMD(CH_3WAY))
                 Ppacket[13] |= CG023_LED_OFF;
             if(multipro.getChannelIsCMD(CH_FLIP))
                 Ppacket[13] |= CG023_FLIP;

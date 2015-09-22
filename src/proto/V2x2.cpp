@@ -188,16 +188,17 @@ static void V2x2_set_flags(uint16_t* flags)
 
 static uint8_t V2x2_convert_channel(t_channelOrder num)
 {
-    if(multipro.getChannel(num)<PPM_MID)
+    if(multipro.getChannel(num)<PPM_MID) {
         return map(multipro.getChannel(num),PPM_MIN,PPM_MID,0x7F,0x00);
-    else
+    } else {
         return map(multipro.getChannel(num),PPM_MID,PPM_MAX,0x80,0xFF);
+    }
 }
 
 static void V2x2_send_packet(uint8_t bind)
 {
     if (bind) {
-        V2x2_flags     = V2x2_FLAG_BIND;
+        V2x2_flags = V2x2_FLAG_BIND;
         Ppacket[0] = 0;
         Ppacket[1] = 0;
         Ppacket[2] = 0;
@@ -208,7 +209,7 @@ static void V2x2_send_packet(uint8_t bind)
     } else {
         // regular packet
         V2x2_set_flags(&V2x2_flags);
-        Ppacket[0] = map(multipro.getChannel(CH_THROTTLE),PPM_MIN,PPM_MAX,0,255); // 0 - 255
+        Ppacket[0] = multipro.getChannel(CH_THROTTLE, 0, 255); // 0 - 255
         Ppacket[1] = V2x2_convert_channel(CH_RUDDER); // 7f - [00 - 80] - ff
         Ppacket[2] = V2x2_convert_channel(CH_ELEVATOR); // 7f - [00 - 80] - ff
         Ppacket[3] = V2x2_convert_channel(CH_AILERON); // 7f - [00 - 80] - ff
