@@ -156,7 +156,7 @@ static void V2x2_set_flags(uint16_t* flags)
     uint8_t num_channels = multipro.getChannelNum();
 
     // Channel 5
-    if (multipro.getChannel(CH_FLIP) <= PPM_MID) *flags &= ~V2x2_FLAG_LED;
+    if (multipro.getChannel(CH_3WAY) <= PPM_MID) *flags &= ~V2x2_FLAG_LED;
     else *flags |= V2x2_FLAG_LED;
     
     // Channel 6
