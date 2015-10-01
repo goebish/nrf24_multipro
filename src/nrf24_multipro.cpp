@@ -235,6 +235,24 @@ void nrf24_multipro::setChannel(t_channelOrder ch, uint16_t value) {
 }
 
 /**
+ *
+ * @param renew bool
+ */
+void nrf24_multipro::set_txid(bool renew) {
+    uint8_t i;
+    for(i = 0; i < 4; i++) {
+        transmitterID[i] = EEPROM.read(ee_TXID0 + i);
+    }
+    if(renew || (transmitterID[0] == 0xFF && transmitterID[1] == 0x0FF)) {
+        for(i = 0; i < 4; i++) {
+            transmitterID[i] = random() & 0xFF;
+            EEPROM.update(ee_TXID0 + i, transmitterID[i]);
+        }
+    }
+}
+
+
+/**
  * init NRF24 (RF)
  */
 void nrf24_multipro::initRF(void) {
@@ -258,20 +276,4 @@ void nrf24_multipro::initProt(void) {
 
 }
 
-/**
- *
- * @param renew bool
- */
-void nrf24_multipro::set_txid(bool renew) {
-    uint8_t i;
-    for(i = 0; i < 4; i++) {
-        transmitterID[i] = EEPROM.read(ee_TXID0 + i);
-    }
-    if(renew || (transmitterID[0] == 0xFF && transmitterID[1] == 0x0FF)) {
-        for(i = 0; i < 4; i++) {
-            transmitterID[i] = random() & 0xFF;
-            EEPROM.update(ee_TXID0 + i, transmitterID[i]);
-        }
-    }
-}
 

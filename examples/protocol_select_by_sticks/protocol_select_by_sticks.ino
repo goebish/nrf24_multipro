@@ -28,104 +28,78 @@
  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/// @todo rewrite to new librarie
-
 #include <util/atomic.h>
+#include <Arduino.h>
 #include <EEPROM.h>
-#include "iface_nrf24l01.h"
+
+#include <nrf24_multipro.h>
+
+#ifndef SOFTSPI
+#include <SPI.h>
+#endif
 
 
-// ############ Wiring ################
-#define PPM_pin   2  // PPM in
+#define PPM_pin         2
+#define PPM_CHANNELS    12
+
+// PPM output values of remote control
+#define PPM_RC_MIN      1000
+#define PPM_RC_MAX      2000
+
+#if F_CPU == 16000000
+#define PPM_SCALE 1L
+#elif F_CPU == 8000000
+#define PPM_SCALE 0L
+#else
+#error // 8 or 16MHz only !
+#endif
+
+#define CH_BIND (CH_MAX_CONTROL)
+#define CH_MAX  (CH_MAX_CONTROL+1)
+
+
+
+
+/*
+// use this style to setup own pin mapping
+
+#define led_Pin   13  // LED  - D13
+
 //SPI Comm.pins with nRF24L01
-#define MOSI_pin  3  // MOSI - D3
-#define SCK_pin   4  // SCK  - D4
-#define CE_pin    5  // CE   - D5
-#define MISO_pin  A0 // MISO - A0
-#define CS_pin    A1 // CS   - A1
+#define MOSI_pin  5   // MOSI - D5
+#define SCK_pin   4   // SCK  - D4
+#define MISO_pin  6   // MISO - D6
 
-#define ledPin    13 // LED  - D13
+#define CE_pin    A3  // CE   - A3
+#define CS_pin    8   // CS   - D8
 
-// SPI outputs
-#define MOSI_on PORTD |= _BV(3)  // PD3
-#define MOSI_off PORTD &= ~_BV(3)// PD3
-#define SCK_on PORTD |= _BV(4)   // PD4
-#define SCK_off PORTD &= ~_BV(4) // PD4
-#define CE_on PORTD |= _BV(5)    // PD5
-#define CE_off PORTD &= ~_BV(5)  // PD5
-#define CS_on PORTC |= _BV(1)    // PC1
-#define CS_off PORTC &= ~_BV(1)  // PC1
-// SPI input
-#define  MISO_on (PINC & _BV(0)) // PC0
+nrf24_multipro multipro = nrf24_multipro(MOSI_pin, SCK_pin, MISO_pin, CE_pin, CS_pin, led_Pin);
+*/
 
-#define RF_POWER 2 // 0-3, it was found that using maximum power can cause some issues, so let's use 2... 
+nrf24_multipro multipro;
 
-// PPM stream settings
-#define CHANNELS 12 // number of channels in ppm stream, 12 ideally
-enum chan_order{
-    THROTTLE,
-    AILERON,
-    ELEVATOR,
-    RUDDER,
-    AUX1,  // (CH5)  led light (3 pos. rate on CX-10, H7)
-    AUX2,  // (CH6)  flip control
-    AUX3,  // (CH7)  sill camera
-    AUX4,  // (CH8)  video camera
-    AUX5,  // (CH9)  headless
-    AUX6,  // (CH10) calibrate Y (V2x2), pitch trim (H7), RTH (Bayang)
-    AUX7,  // (CH11) calibrate X (V2x2), roll trim (H7)
-    AUX8,  // (CH12) Reset / Rebind
-};
-
-#define PPM_MIN 1000
-#define PPM_SAFE_THROTTLE 1050 
-#define PPM_MID 1500
-#define PPM_MAX 2000
-#define PPM_MIN_COMMAND 1300
-#define PPM_MAX_COMMAND 1700
-
-// supported protocols
-enum {
-    PROTO_V2X2 = 0,     // WLToys V2x2, JXD JD38x, JD39x, JJRC H6C, Yizhan Tarantula X6 ...
-    PROTO_CG023,        // EAchine CG023, CG032, 3D X4
-    PROTO_CX10_BLUE,    // Cheerson CX-10 blue board, newer red board, CX-10A, Floureon FX-10, CX-Stars (todo: add DM007 variant)
-    PROTO_CX10_GREEN,   // Cheerson CX-10 green board
-    PROTO_H7,           // EAchine H7, MoonTop M99xx
-    PROTO_BAYANG,       // EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850
-    PROTO_SYMAX5C1,     // Syma X5C-1 (not older X5C), X11, X11C, X12
-    PROTO_YD829,        // YD-829, YD-829C, YD-822 ...
-    PROTO_END
-};
-
-// EEPROM locations
-enum{
-    ee_PROTOCOL_ID = 0,
-    ee_TXID0,
-    ee_TXID1,
-    ee_TXID2,
-    ee_TXID3
-};
-
-uint8_t transmitterID[4];
-uint8_t current_protocol;
+// CH 1-11   control
+// CH 12     bind / reset
+// CH 13     set Mode
+static uint16_t ppm[CH_MAX] = { 0 };
+static volatile uint16_t ppm_irq[CH_MAX] = { 0 };
 static volatile bool ppm_ok = false;
-uint8_t packet[32];
-static bool reset=true;
-volatile uint16_t Servo_data[12];
-static uint16_t ppm[12] = {PPM_MIN,PPM_MIN,PPM_MIN,PPM_MIN,PPM_MID,PPM_MID,
-                           PPM_MID,PPM_MID,PPM_MID,PPM_MID,PPM_MID,PPM_MID,};
+static unsigned long last_ppm = 0;
 
-void setup()
-{
-    randomSeed((analogRead(A4) & 0x1F) | (analogRead(A5) << 5));
-    pinMode(ledPin, OUTPUT);
-    digitalWrite(ledPin, LOW); //start LED off
-    pinMode(PPM_pin, INPUT);
-    pinMode(MOSI_pin, OUTPUT);
-    pinMode(SCK_pin, OUTPUT);
-    pinMode(CS_pin, OUTPUT);
-    pinMode(CE_pin, OUTPUT);
-    pinMode(MISO_pin, INPUT);
+static bool reset = true;
+
+
+void ppm_update(void);
+void ISR_ppm(void);
+void selectProtocol(void);
+
+void setup(void) {
+    Serial.begin(115200);
+
+    DEBUG_MULTI(F("\n\n\n"));
+
+    // pullup to allow open drain remotes
+    pinMode(PPM_pin, INPUT_PULLUP);
 
     // PPM ISR setup
     attachInterrupt(PPM_pin - 2, ISR_ppm, CHANGE);
@@ -133,196 +107,170 @@ void setup()
     TCCR1B = 0;
     TCCR1B |= (1 << CS11);  //set timer1 to increment every 1 us @ 8MHz, 0.5 us @16MHz
 
-    set_txid(false);
+    DEBUG_MULTI(F("wait for remote...\n"));
+    while(!ppm_ok) {}
+    ppm_update();
+
+    DEBUG_MULTI(F("wait for throttle low...\n"));
+    while(ppm[CH_THROTTLE] > PPM_SAFE_THROTTLE) {
+        ppm_update();
+    }
+
+
+    multipro.setChannelNum(PPM_CHANNELS);
+    multipro.begin();
+
 }
 
-void loop()
-{
-    uint32_t timeout;
-    // reset / rebind
-    if(reset || ppm[AUX8] > PPM_MAX_COMMAND) {
-        reset = false;
-        selectProtocol();        
-        NRF24L01_Reset();
-        NRF24L01_Initialize();
-        init_protocol();
+void loop(void) {
+    if(ppm_ok) {
+        ppm_update();
+
+        if(reset || ppm[CH_BIND] > PPM_MAX_COMMAND) {
+            reset = false;
+            DEBUG_MULTI(F("wait for bind / reset low...\n"));
+            while(ppm[CH_BIND] > PPM_MAX_COMMAND) {
+                ppm_update();
+            }
+
+            selectProtocol();
+
+            multipro.reset();
+        }
+
+
+        for(uint8_t ch = 0; ((ch < CH_MAX_CONTROL) && (ch < PPM_CHANNELS)); ch++) {
+#if ((PPM_RC_MIN != PPM_MIN ) || (PPM_RC_MAX != PPM_MAX))
+            multipro.setChannel((t_channelOrder) ch, map(ppm[ch], PPM_RC_MIN, PPM_RC_MAX, PPM_MIN, PPM_MAX));
+#else
+            multipro.setChannel((t_channelOrder) ch, ppm[ch]);
+#endif
+        }
+
+        ppm_update();
     }
-    // process protocol
-    switch(current_protocol) {
-        case PROTO_CG023:
-        case PROTO_YD829:
-            timeout = process_CG023();
-            break;
-        case PROTO_V2X2:
-            timeout = process_V2x2();
-            break;
-        case PROTO_CX10_GREEN:
-        case PROTO_CX10_BLUE:
-            timeout = process_CX10();
-            break;
-        case PROTO_H7:
-            timeout = process_H7();
-            break;
-        case PROTO_BAYANG:
-            timeout = process_Bayang();
-            break;
-        case PROTO_SYMAX5C1:
-            timeout = process_SymaX();
-            break;
+
+    /**
+     * lost connection to remote control
+     * kill the quad connection for safety
+     */
+    if(last_ppm && millis() - last_ppm > 10000) {
+        DEBUG_MULTI(F("remote control connection lost!\n"));
+        multipro.reset();
+
+        DEBUG_MULTI(F("wait for remote...\n"));
+        while((millis() - last_ppm > 10000)) {
+            ppm_update();
+        }
+
+        DEBUG_MULTI(F("remote control connection found! reconnect...\n"));
+        multipro.reset();
+        ppm_update();
     }
-    // updates ppm values out of ISR
-    update_ppm();
-    // wait before sending next packet
-    while(micros() < timeout)
-    {   };
+
+    multipro.loop();
 }
 
-void set_txid(bool renew)
-{
-    uint8_t i;
-    for(i=0; i<4; i++)
-        transmitterID[i] = EEPROM.read(ee_TXID0+i);
-    if(renew || (transmitterID[0]==0xFF && transmitterID[1]==0x0FF)) {
-        for(i=0; i<4; i++) {
-            transmitterID[i] = random() & 0xFF;
-            EEPROM.update(ee_TXID0+i, transmitterID[i]); 
-        }            
+void ppm_update(void) {
+    if(ppm_ok) {
+        last_ppm = millis();
+        for(uint8_t ch = 0; ch < PPM_CHANNELS; ch++) {
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+            {
+                ppm[ch] = ppm_irq[ch];
+            }
+        }
+        ppm_ok = false;
     }
 }
 
-void selectProtocol()
+void ISR_ppm(void) {
+    static unsigned int pulse;
+    static unsigned long counterPPM;
+    static byte chan;
+    counterPPM = TCNT1;
+    TCNT1 = 0;
+    ppm_ok = false;
+    if(counterPPM < 510 << PPM_SCALE) {  //must be a pulse if less than 510us
+        pulse = counterPPM;
+    } else if(counterPPM > 1910 << PPM_SCALE) {  //sync pulses over 1910us
+        chan = 0;
+    } else {  //servo values between 510us and 2420us will end up here
+        if(chan < PPM_CHANNELS) {
+            ppm_irq[chan] = constrain((counterPPM + pulse) >> PPM_SCALE, PPM_RC_MIN, PPM_RC_MAX);
+            if(chan == PPM_CHANNELS - 1) {
+                ppm_ok = true; // complete ppm frame
+            }
+        }
+        chan++;
+    }
+}
+
+void selectProtocol(void)
 {
+
+    t_protocols current_protocol;
+
     // wait for multiple complete ppm frames
     ppm_ok = false;
     uint8_t count = 10;
     while(count) {
         while(!ppm_ok) {} // wait
-        update_ppm();
-        if(ppm[AUX8] < PPM_MAX_COMMAND) // reset chan released
+        ppm_update();
+        if(ppm[CH_BIND] < PPM_MAX_COMMAND) // reset chan released
             count--;
         ppm_ok = false;
     }
     
     // startup stick commands
     
-    if(ppm[RUDDER] < PPM_MIN_COMMAND)        // Rudder left
-        set_txid(true);                      // Renew Transmitter ID
+    if(ppm[CH_RUDDER] < PPM_MIN_COMMAND)        // Rudder left
+        multipro.set_txid(true);                      // Renew Transmitter ID
     
     // protocol selection
     
     // Elevator down + Aileron right
-    if(ppm[ELEVATOR] < PPM_MIN_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
+    if(ppm[CH_ELEVATOR] < PPM_MIN_COMMAND && ppm[CH_AILERON] > PPM_MAX_COMMAND)
         current_protocol = PROTO_YD829; // YD-829, YD-829C, YD-822 ...
     
     // Elevator down + Aileron left
-    else if(ppm[ELEVATOR] < PPM_MIN_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND)
+    else if(ppm[CH_ELEVATOR] < PPM_MIN_COMMAND && ppm[CH_AILERON] < PPM_MIN_COMMAND)
         current_protocol = PROTO_SYMAX5C1; // Syma X5C-1, X11, X11C, X12
     
     // Elevator up + Aileron right
-    else if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
+    else if(ppm[CH_ELEVATOR] > PPM_MAX_COMMAND && ppm[CH_AILERON] > PPM_MAX_COMMAND)
         current_protocol = PROTO_BAYANG;    // EAchine H8 mini, BayangToys X6/X7/X9, JJRC JJ850 ...
     
     // Elevator up + Aileron left
-    else if(ppm[ELEVATOR] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND) 
+    else if(ppm[CH_ELEVATOR] > PPM_MAX_COMMAND && ppm[CH_AILERON] < PPM_MIN_COMMAND)
         current_protocol = PROTO_H7;        // EAchine H7, MT99xx
     
     // Elevator up  
-    else if(ppm[ELEVATOR] > PPM_MAX_COMMAND)
+    else if(ppm[CH_ELEVATOR] > PPM_MAX_COMMAND)
         current_protocol = PROTO_V2X2;       // WLToys V202/252/272, JXD 385/388, JJRC H6C ...
         
     // Elevator down
-    else if(ppm[ELEVATOR] < PPM_MIN_COMMAND) 
+    else if(ppm[CH_ELEVATOR] < PPM_MIN_COMMAND)
         current_protocol = PROTO_CG023;      // EAchine CG023/CG031/3D X4, (todo :ATTOP YD-836/YD-836C) ...
     
     // Aileron right
-    else if(ppm[AILERON] > PPM_MAX_COMMAND)  
+    else if(ppm[CH_AILERON] > PPM_MAX_COMMAND)
         current_protocol = PROTO_CX10_BLUE;  // Cheerson CX10(blue pcb, newer red pcb)/CX10-A/CX11/CX12 ... 
     
     // Aileron left
-    else if(ppm[AILERON] < PPM_MIN_COMMAND)  
+    else if(ppm[CH_AILERON] < PPM_MIN_COMMAND)
         current_protocol = PROTO_CX10_GREEN;  // Cheerson CX10(green pcb)... 
     
     // read last used protocol from eeprom
     else 
-        current_protocol = constrain(EEPROM.read(ee_PROTOCOL_ID),0,PROTO_END-1);      
+        current_protocol = (t_protocols) constrain(EEPROM.read(ee_PROTOCOL_ID),0,PROTO_END-1);
     // update eeprom 
-    EEPROM.update(ee_PROTOCOL_ID, current_protocol);
+
+    multipro.setProtocol(current_protocol);
+
     // wait for safe throttle
-    while(ppm[THROTTLE] > PPM_SAFE_THROTTLE) {
+    while(ppm[CH_THROTTLE] > PPM_SAFE_THROTTLE) {
         delay(100);
-        update_ppm();
-    }
-}
-
-void init_protocol()
-{
-    switch(current_protocol) {
-        case PROTO_CG023:
-        case PROTO_YD829:
-            CG023_init();
-            CG023_bind();
-            break;
-        case PROTO_V2X2:
-            V2x2_init();
-            V2x2_bind();
-            break;
-        case PROTO_CX10_GREEN:
-        case PROTO_CX10_BLUE:
-            CX10_init();
-            CX10_bind();
-            break;
-        case PROTO_H7:
-            H7_init();
-            H7_bind();
-            break;
-        case PROTO_BAYANG:
-            Bayang_init();
-            Bayang_bind();
-            break;
-        case PROTO_SYMAX5C1:
-            Symax_init();
-            SymaX_bind();
-            break;
-    }
-}
-
-// update ppm values out of ISR    
-void update_ppm()
-{
-    for(uint8_t ch=0; ch<CHANNELS; ch++) {
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            ppm[ch] = Servo_data[ch];
-        }
-    }    
-}
-
-void ISR_ppm()
-{
-    #if F_CPU == 16000000
-        #define PPM_SCALE 1L
-    #elif F_CPU == 8000000
-        #define PPM_SCALE 0L
-    #else
-        #error // 8 or 16MHz only !
-    #endif
-    static unsigned int pulse;
-    static unsigned long counterPPM;
-    static byte chan;
-    counterPPM = TCNT1;
-    TCNT1 = 0;
-    ppm_ok=false;
-    if(counterPPM < 510 << PPM_SCALE) {  //must be a pulse if less than 510us
-        pulse = counterPPM;
-    }
-    else if(counterPPM > 1910 << PPM_SCALE) {  //sync pulses over 1910us
-        chan = 0;
-    }
-    else{  //servo values between 510us and 2420us will end up here
-        if(chan < CHANNELS) {
-            Servo_data[chan]= constrain((counterPPM + pulse) >> PPM_SCALE, PPM_MIN, PPM_MAX);
-            if(chan==CHANNELS-1)
-                ppm_ok = true; // complete ppm frame
-        }
-        chan++;
+        ppm_update();
     }
 }

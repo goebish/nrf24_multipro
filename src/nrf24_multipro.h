@@ -87,11 +87,12 @@ class nrf24_multipro {
 
         void setChannel(t_channelOrder ch, uint16_t value);
 
+        void set_txid(bool renew);
+
     private:
 
         void initRF(void);
         void initProt(void);
-        void set_txid(bool renew);
 
         t_protocols current_protocol;
         uint16_t ppm[CH_MAX_CONTROL];

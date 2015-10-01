@@ -1,6 +1,7 @@
 #include <util/atomic.h>
 #include <Arduino.h>
 
+#include <EEPROM.h>
 #include <nrf24_multipro.h>
 
 #ifndef SOFTSPI
@@ -26,6 +27,25 @@
 #define CH_BIND (CH_MAX_CONTROL)
 #define CH_MODE (CH_MAX_CONTROL+1)
 #define CH_MAX  (CH_MAX_CONTROL+2)
+
+
+/*
+// use this style to setup own pin mapping
+
+#define led_Pin   13  // LED  - D13
+
+//SPI Comm.pins with nRF24L01
+#define MOSI_pin  5   // MOSI - D5
+#define SCK_pin   4   // SCK  - D4
+#define MISO_pin  6   // MISO - D6
+
+#define CE_pin    A3  // CE   - A3
+#define CS_pin    8   // CS   - D8
+
+nrf24_multipro multipro = nrf24_multipro(MOSI_pin, SCK_pin, MISO_pin, CE_pin, CS_pin, led_Pin);
+*/
+
+nrf24_multipro multipro;
 
 // CH 1-11   control
 // CH 12     bind / reset
@@ -61,10 +81,15 @@ void setup(void) {
         ppm_update();
     }
 
-    multipro.begin();
-    multipro.setChannelNum(PPM_CHANNELS);
-    //multipro.setProtocol(PROTO_H7);
+    t_protocols newP = (t_protocols) map(ppm[CH_MODE], PPM_RC_MIN, PPM_RC_MAX, 0, 40);
 
+    DEBUG_MULTI(F("wait good protocol setting on CH13...\n"));
+    while(newP >= PROTO_END) {
+        ppm_update();
+    }
+
+    multipro.setChannelNum(PPM_CHANNELS);
+    multipro.begin(newP);
 }
 
 void loop(void) {
@@ -111,6 +136,8 @@ void loop(void) {
             multipro.setChannel((t_channelOrder) ch, ppm[ch]);
 #endif
         }
+
+        ppm_update();
     }
 
     /**
@@ -125,6 +152,10 @@ void loop(void) {
         while((millis() - last_ppm > 10000)) {
             ppm_update();
         }
+
+        DEBUG_MULTI(F("remote control connection found! reconnect...\n"));
+        multipro.reset();
+        ppm_update();
     }
 
     multipro.loop();
@@ -156,9 +187,10 @@ void ISR_ppm(void) {
         chan = 0;
     } else {  //servo values between 510us and 2420us will end up here
         if(chan < PPM_CHANNELS) {
-            ppm_irq[chan] = constrain((counterPPM + pulse) >> PPM_SCALE, PPM_MIN, PPM_MAX);
-            if(chan == PPM_CHANNELS - 1)
+            ppm_irq[chan] = constrain((counterPPM + pulse) >> PPM_SCALE, PPM_RC_MIN, PPM_RC_MAX);
+            if(chan == PPM_CHANNELS - 1) {
                 ppm_ok = true; // complete ppm frame
+            }
         }
         chan++;
     }
