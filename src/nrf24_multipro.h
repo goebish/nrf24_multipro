@@ -25,37 +25,6 @@
 
 #define DEBUG_MULTI(text) Serial.print(text);
 
-
-#define ledPin    13 // LED  - D13
-
-//SPI Comm.pins with nRF24L01
-#ifdef SOFTSPI
-#define MOSI_pin  3  // MOSI - D3
-#define SCK_pin   4  // SCK  - D4
-#define MISO_pin  A0 // MISO - A0
-#endif
-
-#define CE_pin    5  // CE   - D5
-#define CS_pin    A1 // CS   - A1
-
-// SPI outputs
-#ifdef SOFTSPI
-#define MOSI_on PORTD |= _BV(3)  // PD3
-#define MOSI_off PORTD &= ~_BV(3)// PD3
-#define SCK_on PORTD |= _BV(4)   // PD4
-#define SCK_off PORTD &= ~_BV(4) // PD4
-#endif
-
-#define CE_on PORTD |= _BV(5)    // PD5
-#define CE_off PORTD &= ~_BV(5)  // PD5
-#define CS_on PORTC |= _BV(1)    // PC1
-#define CS_off PORTC &= ~_BV(1)  // PC1
-
-// SPI input
-#ifdef SOFTSPI
-#define  MISO_on (PINC & _BV(0)) // PC0
-#endif
-
 #define RF_POWER 2 // 0-3, it was found that using maximum power can cause some issues, so let's use 2...
 
 // PPM stream settings
@@ -92,10 +61,17 @@ typedef enum {
 
 class nrf24_multipro {
     public:
+#ifdef SOFTSPI
+        nrf24_multipro(int _pinMOSI = 3, int _pinSCK = 4, int _pinMISO = A0, int _pinCE = 5, int _pinCS = A1, int _pinLED = 13);
+#else
+        nrf24_multipro(int _pinCE = A0, int _pinCS = A1, int _pinLED = A2);
+#endif
+
         void begin(void);
+        void begin(t_protocols protocol);
         void loop(void);
 
-        void reset(void);
+        void reset(bool bind = true);
 
         t_protocols getProtocol(void);
         void setProtocol(t_protocols protocol);
@@ -111,7 +87,6 @@ class nrf24_multipro {
 
         void setChannel(t_channelOrder ch, uint16_t value);
 
-
     private:
 
         void initRF(void);
@@ -126,5 +101,6 @@ class nrf24_multipro {
 
 extern uint8_t transmitterID[4];
 extern nrf24_multipro multipro;
+extern int pinLED;
 
 #endif /* MULTIREMOTE_H_ */

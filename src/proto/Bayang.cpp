@@ -74,10 +74,10 @@ void protBAYANG::bind()
     while(counter) {
         send_packet(1);
         delayMicroseconds(BAYANG_PACKET_PERIOD);
-        digitalWrite(ledPin, counter-- & 0x10);
+        digitalWrite(pinLED, counter-- & 0x10);
     }
     XN297_SetTXAddr(Bayang_rx_tx_addr, BAYANG_ADDRESS_LENGTH);
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(pinLED, HIGH);
 }
 
 #define DYNTRIM(chval) ((u8)((chval >> 2) & 0xfc))

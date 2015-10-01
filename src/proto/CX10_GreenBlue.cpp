@@ -109,9 +109,9 @@ void protCX10_GREENBLUE::bind() {
                 }
                 break;
         }
-        digitalWrite(ledPin, counter-- & 0x10);
+        digitalWrite(pinLED, counter-- & 0x10);
     }
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(pinLED, HIGH);
 }
 
 void protCX10_GREENBLUE::CX10_Write_Packet(uint8_t init) {

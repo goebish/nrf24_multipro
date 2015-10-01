@@ -19,100 +19,71 @@
 
 static uint8_t rf_setup;
 
-static uint8_t Strobe(uint8_t state);
-
-
-
-static uint8_t Strobe(uint8_t state)
-{
-    uint8_t result;
-    CS_off;
-    result = spi_write(state);
-    CS_on;
-    return result;
-}
-
-
 uint8_t NRF24L01_WriteReg(uint8_t address, uint8_t data)
 {
-    CS_off;
     spi_write_address(address | W_REGISTER, data);
-    CS_on;
     return 1;
 }
 
 void NRF24L01_WriteRegisterMulti(uint8_t address, const uint8_t data[], uint8_t len)
 {
     delayMicroseconds(5);
-    CS_off;
-    spi_write(address | W_REGISTER);
-    for(uint8_t i=0;i<len;i++)
-        spi_write(data[i]);
-    CS_on;
+    spi_write_address_bytes(address | W_REGISTER, (uint8_t*) &data[0], len);
     delayMicroseconds(5);
 }
+
+void NRF24L01_ReadRegisterMulti(uint8_t address, const uint8_t data[], uint8_t len)
+{
+    spi_read_address_bytes(address | R_REGISTER, (uint8_t*) &data[0], len);
+}
+
 
 void NRF24L01_Initialize()
 {
     rf_setup = 0x0F;
+    spi_CE_off();
 }
 
 uint8_t NRF24L01_FlushTx()
 {
-    return Strobe(FLUSH_TX);
+    return spi_write_byte(FLUSH_TX);
 }
 
 uint8_t NRF24L01_FlushRx()
 {
-    return Strobe(FLUSH_RX);
+    return spi_write_byte(FLUSH_RX);
 }
 
 
 uint8_t NRF24L01_WritePayload(uint8_t *data, uint8_t length)
 {
-    CE_off;
-    CS_off;
-    spi_write(W_TX_PAYLOAD); 
-    for(uint8_t i=0; i<length; i++)
-        spi_write(data[i]);
-    CS_on;
-    CE_on; // transmit
+    spi_CE_off();
+    NRF24L01_WriteRegisterMulti(W_TX_PAYLOAD, data, length);
+    spi_CE_on(); // transmit
     return 1;
 }
 
 uint8_t NRF24L01_ReadPayload(uint8_t *data, uint8_t length)
 {
-    uint8_t i;
-    CS_off;
-    spi_write(R_RX_PAYLOAD); // Read RX payload
-    for (i=0;i<length;i++) {
-        data[i]=spi_read();
-    }
-    CS_on;
+    spi_read_address_bytes(R_RX_PAYLOAD, data, length); // Read RX payload
     return 1;
 }
 
 uint8_t NRF24L01_ReadReg(uint8_t reg)
 {
-    CS_off;
-    uint8_t data = spi_read_address(reg);
-    CS_on;
-    return data;
+    return spi_read_address(reg);;
 }
 
 uint8_t NRF24L01_Activate(uint8_t code)
 {
-    CS_off;
-    spi_write(ACTIVATE);
-    spi_write(code);
-    CS_on;
+    spi_write_address(ACTIVATE, code);
     return 1;
 }
 
 void NRF24L01_SetTxRxMode(enum TXRX_State mode)
 {
     if(mode == TX_EN) {
-        CE_off;
+        spi_CE_off();
         NRF24L01_WriteReg(NRF24L01_07_STATUS, (1 << NRF24L01_07_RX_DR)    //reset the flag(s)
                                             | (1 << NRF24L01_07_TX_DS)
                                             | (1 << NRF24L01_07_MAX_RT));
@@ -120,9 +91,9 @@ void NRF24L01_SetTxRxMode(enum TXRX_State mode)
                                             | (1 << NRF24L01_00_CRCO)
                                             | (1 << NRF24L01_00_PWR_UP));
         delayMicroseconds(130);
-        CE_on;
+        spi_CE_on();
     } else if (mode == RX_EN) {
-        CE_off;
+        spi_CE_off();
         NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);        // reset the flag(s)
         NRF24L01_WriteReg(NRF24L01_00_CONFIG, 0x0F);        // switch to RX mode
         NRF24L01_WriteReg(NRF24L01_07_STATUS, (1 << NRF24L01_07_RX_DR)    //reset the flag(s)
@@ -133,10 +104,10 @@ void NRF24L01_SetTxRxMode(enum TXRX_State mode)
                                             | (1 << NRF24L01_00_PWR_UP)
                                             | (1 << NRF24L01_00_PRIM_RX));
         delayMicroseconds(130);
-        CE_on;
+        spi_CE_on();
     } else {
         NRF24L01_WriteReg(NRF24L01_00_CONFIG, (1 << NRF24L01_00_EN_CRC)); //PowerDown
-        CE_off;
+        spi_CE_off();
     }
 }
 
@@ -144,7 +115,7 @@ uint8_t NRF24L01_Reset()
 {
     NRF24L01_FlushTx();
     NRF24L01_FlushRx();
-    uint8_t status1 = Strobe(0xFF); // NOP
+    uint8_t status1 = spi_write_byte(0xFF); // NOP
     uint8_t status2 = NRF24L01_ReadReg(0x07);
     NRF24L01_SetTxRxMode(TXRX_OFF);
     return (status1 == status2 && (status1 & 0x0f) == 0x0e);

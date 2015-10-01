@@ -115,6 +115,7 @@ typedef enum TXRX_State {
 
 uint8_t NRF24L01_WriteReg(uint8_t address, uint8_t data);
 void NRF24L01_WriteRegisterMulti(uint8_t address, const uint8_t data[], uint8_t len);
+void NRF24L01_ReadRegisterMulti(uint8_t address, const uint8_t data[], uint8_t len);
 void NRF24L01_Initialize();
 uint8_t NRF24L01_FlushTx();
 uint8_t NRF24L01_FlushRx();

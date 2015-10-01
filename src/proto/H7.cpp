@@ -102,7 +102,7 @@ void protH7::bind() {
             NRF24L01_WriteReg(NRF24L01_05_RF_CH, H7_freq[ch]);
             XN297_WritePayload(Ppacket, H7_PAYPLOAD_SIZE); //(bind packet)
             delayMicroseconds(H7_PACKET_PERIOD);
-            digitalWrite(ledPin, bitRead(counter, 3));
+            digitalWrite(pinLED, bitRead(counter, 3));
         }
     }
     delay(15);
@@ -110,7 +110,7 @@ void protH7::bind() {
     H7_tx_addr[1] = transmitterID[1];
     H7_tx_addr[2] = 0;
     XN297_SetTXAddr(H7_tx_addr, 5);
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(pinLED, HIGH);
 }
 
 uint8_t H7_calcChecksum() {

@@ -69,8 +69,6 @@ static void V2x2_set_tx_id();
 void protV2x2::init(void)
 {
     V2x2_set_tx_id();
-    CE_off;
-    CS_on;
     NRF24L01_Initialize();
     NRF24L01_Reset();
     // 2-bytes CRC, radio off
@@ -114,11 +112,11 @@ void protV2x2::bind(void)
     uint16_t counter=1000;
     while(counter--) {
         V2x2_send_packet(1); 
-        digitalWrite(ledPin, bitRead(counter,3)); //check for 0bxxxx1xxx to flash LED
+        digitalWrite(pinLED, bitRead(counter,3)); //check for 0bxxxx1xxx to flash LED
         delayMicroseconds(V2x2_PACKET_PERIOD);
     } 
     V2x2_flags = 0; 
-    digitalWrite(ledPin, HIGH); // LED on at end of bind  
+    digitalWrite(pinLED, HIGH); // LED on at end of bind
 }
 
 uint32_t protV2x2::loop(void)

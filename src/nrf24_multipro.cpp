@@ -18,6 +18,7 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "nrf24_multipro.h"
+#include "SPIapi.h"
 
 /**
  * global transmitterID
@@ -25,32 +26,51 @@
  */
 uint8_t transmitterID[4];
 
+
+/**
+ * LED
+ * @todo use function
+ */
+int pinLED;
+
+/**
+ * constractor
+ */
+#ifdef SOFTSPI
+nrf24_multipro::nrf24_multipro(int _pinMOSI, int _pinSCK, int _pinMISO, int _pinCE, int _pinCS, int _pinLED) {
+#else
+nrf24_multipro::nrf24_multipro(int _pinCE, int _pinCS, int _pinLED) {
+#endif
+    pinLED = _pinLED;
+
+    current_protocol = PROTO_V2X2;
+    channel_num = CH_MAX_CONTROL;
+
+#ifdef SOFTSPI
+    spi_config(_pinMOSI, _pinSCK, _pinMISO, _pinCE, _pinCS);
+#else
+    spi_config(_pinCE, _pinCS);
+#endif
+
+}
+
 /**
  * called on startup
  */
-void nrf24_multipro::begin(void) {
+void nrf24_multipro::begin(t_protocols protocol) {
 
     randomSeed((analogRead(A4) & 0x1F) | (analogRead(A5) << 5));
 
-    pinMode(ledPin, OUTPUT);
-    digitalWrite(ledPin, LOW); //start LED off
-    pinMode(CS_pin, OUTPUT);
-    pinMode(CE_pin, OUTPUT);
+    pinMode(pinLED, OUTPUT);
+    digitalWrite(pinLED, LOW); //start LED off
 
-#ifdef SOFTSPI
-    pinMode(MOSI_pin, OUTPUT);
-    pinMode(SCK_pin, OUTPUT);
-    pinMode(MISO_pin, INPUT);
-#else
-    SPI.begin();
-#endif
+    spi_begin();
 
     DEBUG_MULTI("[MR] set_txid...\n");
 
     set_txid(false);
 
-    channel_num = CH_MAX_CONTROL;
-    current_protocol = (t_protocols) constrain(EEPROM.read(ee_PROTOCOL_ID), 0, PROTO_END - 1);
+    current_protocol = protocol;
 
     DEBUG_MULTI("[MR] current_protocol: ");
     DEBUG_MULTI(current_protocol);
@@ -62,9 +82,16 @@ void nrf24_multipro::begin(void) {
 }
 
 /**
+ *
+ */
+void nrf24_multipro::begin(void) {
+    begin((t_protocols) constrain(EEPROM.read(ee_PROTOCOL_ID), 0, PROTO_END - 1));
+}
+
+/**
  * reset the Protocol + RF
  */
-void nrf24_multipro::reset(void) {
+void nrf24_multipro::reset(bool bind) {
 
     /**
      * reset ppm values
@@ -76,7 +103,10 @@ void nrf24_multipro::reset(void) {
     ppm[CH_THROTTLE] = PPM_MIN;
 
     initRF();
-    initProt();
+
+    if(bind) {
+        initProt();
+    }
 }
 
 /**
@@ -245,7 +275,3 @@ void nrf24_multipro::set_txid(bool renew) {
     }
 }
 
-/**
- * global class access
- */
-nrf24_multipro multipro;

@@ -91,13 +91,13 @@ void protSYMAX::bind() {
     while(bind_counter) {
         SYMAX_send_packet(true);
         delayMicroseconds(SYMAX_PACKET_PERIOD);
-        digitalWrite(ledPin, bind_counter-- & 0x10);
+        digitalWrite(pinLED, bind_counter-- & 0x10);
     }
     SYMAX_set_channels(SYMAX_rx_tx_addr[0]);
     NRF24L01_WriteRegisterMulti(NRF24L01_10_TX_ADDR, SYMAX_rx_tx_addr, 5);
     SYMAX_current_chan = 0;
     SYMAX_packet_counter = 0;
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(pinLED, HIGH);
 }
 
 static uint8_t SymaX_checksum(uint8_t *data) {

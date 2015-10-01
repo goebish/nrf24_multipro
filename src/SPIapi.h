@@ -17,10 +17,28 @@
 #ifndef SPIAPI_H_
 #define SPIAPI_H_
 
+#ifdef SOFTSPI
+void spi_config(int _pinMOSI, int _pinSCK, int _pinMISO, int _pinCE , int _pinCS);
+#else
+void spi_config(int _pinCE, int _pinCS);
+#endif
+
+
+void spi_begin(void);
+
 uint8_t spi_read(void);
 uint8_t spi_write(uint8_t command);
 void spi_read_bytes(uint8_t *data, uint8_t length);
 void spi_write_address(uint8_t address, uint8_t data);
 uint8_t spi_read_address(uint8_t address);
+
+uint8_t spi_write_byte(uint8_t byte);
+
+void spi_write_address_bytes(uint8_t address, uint8_t * data, uint8_t len);
+void spi_read_address_bytes(uint8_t address, uint8_t * data, uint8_t len);
+
+
+void spi_CE_on(void);
+void spi_CE_off(void);
 
 #endif /* SPIAPI_H_ */
