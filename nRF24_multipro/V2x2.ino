@@ -148,7 +148,7 @@ static void V2x2_set_flags(uint16_t* flags)
 {
     int num_channels = CHANNELS;
     // Channel 5
-    if (ppm[AUX2] <= PPM_MID) *flags &= ~V2x2_FLAG_LED;
+    if (ppm[AUX1] <= PPM_MID) *flags &= ~V2x2_FLAG_LED;
     else *flags |= V2x2_FLAG_LED;
     
     // Channel 6
