@@ -85,7 +85,10 @@ void setup(void) {
 
     DEBUG_MULTI(F("wait good protocol setting on CH13...\n"));
     while(newP >= PROTO_END) {
-        ppm_update();
+        if(ppm_ok) {
+            ppm_update();
+            newP = (t_protocols) map(ppm[CH_MODE], PPM_RC_MIN, PPM_RC_MAX, 0, 40);
+        }
     }
 
     multipro.setChannelNum(PPM_CHANNELS);

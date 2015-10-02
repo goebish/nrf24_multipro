@@ -268,5 +268,5 @@ void spi_CE_on(void) {
 }
 
 void spi_CE_off(void) {
-    CE_on;
+    CE_off;
 }
