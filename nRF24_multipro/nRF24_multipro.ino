@@ -318,8 +318,8 @@ void ISR_ppm()
     else{  //servo values between 510us and 2420us will end up here
         if(chan < CHANNELS) {
             Servo_data[chan]= constrain((counterPPM + pulse) >> PPM_SCALE, PPM_MIN, PPM_MAX);
-            if(chan==CHANNELS-1)
-                ppm_ok = true; // complete ppm frame
+            if(chan==3)
+                ppm_ok = true; // 4 first channels Ok
         }
         chan++;
     }
