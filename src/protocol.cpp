@@ -48,7 +48,7 @@ protAPI * protocols[PROTO_END] = {
     &CX10_BLUE,     //!< Cheerson CX-10 blue board, newer red board, CX-10A, Floureon FX-10, CX-Stars (todo: add DM007 variant)
     &CX10_GREEN,    //!< Cheerson CX-10 green board
     &H7,            //!< EAchine H7, MoonTop M99xx
-    &BAYANG,        //!< EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850
+    &BAYANG,        //!< EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850, Floureon H101
     &SYMAX5C1,      //!< Syma X5C-1 (not older X5C), X11, X11C, X12
     &YD829,         //!< YD-829, YD-829C, YD-822 ...
     &H7_HIGH,       //!< high speed mode for EAchine H7, MoonTop M99xx

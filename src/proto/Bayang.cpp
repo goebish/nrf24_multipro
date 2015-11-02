@@ -29,6 +29,11 @@ enum{
     BAYANG_FLAG_FLIP     = 0x08,
 };
 
+enum{
+    // flags going to packet[3]
+    BAYANG_FLAG_INVERT   = 0x80,
+};
+
 
 static void send_packet(u8 bind);
 
@@ -105,7 +110,7 @@ static void send_packet(u8 bind)
         Ppacket[2] = GET_FLAG(CH_FLIP, BAYANG_FLAG_FLIP)
                   | GET_FLAG(CH_HEADLESS, BAYANG_FLAG_HEADLESS)
                   | GET_FLAG(CH_AUX6, BAYANG_FLAG_RTH);
-        Ppacket[3] = 0x00;
+        packet[3] = GET_FLAG(CH_3WAY, BAYANG_FLAG_INVERT);
         chanval.value = multipro.getChannel(CH_AILERON, 0, 0x3ff);   // aileron
         Ppacket[4] = chanval.bytes.msb + DYNTRIM(chanval.value);
         Ppacket[5] = chanval.bytes.lsb;
