@@ -31,6 +31,11 @@ enum{
     BAYANG_FLAG_FLIP     = 0x08,
 };
 
+enum{
+    // flags going to packet[3]
+    BAYANG_FLAG_INVERT   = 0x80,
+};
+
 uint32_t process_Bayang()
 {
     uint32_t timeout = micros() + BAYANG_PACKET_PERIOD;
@@ -104,7 +109,7 @@ static void send_packet(u8 bind)
         packet[2] = GET_FLAG(AUX2, BAYANG_FLAG_FLIP)
                   | GET_FLAG(AUX5, BAYANG_FLAG_HEADLESS)
                   | GET_FLAG(AUX6, BAYANG_FLAG_RTH);
-        packet[3] = 0x00;
+        packet[3] = GET_FLAG(AUX1, BAYANG_FLAG_INVERT);
         chanval.value = map(ppm[AILERON], PPM_MIN, PPM_MAX, 0, 0x3ff);   // aileron
         packet[4] = chanval.bytes.msb + DYNTRIM(chanval.value);
         packet[5] = chanval.bytes.lsb;
