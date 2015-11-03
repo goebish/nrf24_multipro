@@ -87,7 +87,7 @@ void Bayang_bind()
 #define DYNTRIM(chval) ((u8)((chval >> 2) & 0xfc))
 #define GET_FLAG(ch, mask) (ppm[ch] > PPM_MAX_COMMAND ? mask : 0)
 
-static void send_packet(u8 bind)
+void send_packet(u8 bind)
 {
     union {
         u16 value;

@@ -49,7 +49,7 @@ uint8_t NRF24L01_FlushRx()
     return Strobe(FLUSH_RX);
 }
 
-static uint8_t Strobe(uint8_t state)
+uint8_t Strobe(uint8_t state)
 {
     uint8_t result;
     CS_off;

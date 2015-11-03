@@ -32,7 +32,7 @@ static const uint16_t xn297_crc_xorout[] = {
     0x8B17, 0x2920, 0x8B5F, 0x61B1, 0xD391, 0x7401, 
     0x2138, 0x129F, 0xB3A0, 0x2988};
 
-static uint8_t bit_reverse(uint8_t b_in)
+uint8_t bit_reverse(uint8_t b_in)
 {
     uint8_t b_out = 0;
     for (uint8_t i = 0; i < 8; ++i) {
@@ -44,7 +44,7 @@ static uint8_t bit_reverse(uint8_t b_in)
 
 static const uint16_t polynomial = 0x1021;
 static const uint16_t initial    = 0xb5d2;
-static uint16_t crc16_update(uint16_t crc, unsigned char a)
+uint16_t crc16_update(uint16_t crc, unsigned char a)
 {
     crc ^= a << 8;
     for (uint8_t i = 0; i < 8; ++i) {

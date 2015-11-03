@@ -57,7 +57,7 @@ static const uint8_t V2x2_freq_hopping[][16] = {
 };
 static uint8_t V2x2_rf_channels[16];
 
-static void V2x2_init()
+void V2x2_init()
 {
     V2x2_set_tx_id();
     CE_off;
@@ -119,7 +119,7 @@ uint32_t process_V2x2()
     return nextPacket;   
 }
 
-static void V2x2_set_tx_id()
+void V2x2_set_tx_id()
 {
     uint8_t sum;
     V2x2_tx_id[0] = transmitterID[0];
@@ -137,14 +137,14 @@ static void V2x2_set_tx_id()
     }
 }
 
-static void V2x2_add_pkt_checksum()
+void V2x2_add_pkt_checksum()
 {
     uint8_t sum = 0;
     for (uint8_t i = 0; i < 15;  ++i) sum += packet[i];
     packet[15] = sum;
 }
 
-static void V2x2_set_flags(uint16_t* flags)
+void V2x2_set_flags(uint16_t* flags)
 {
     int num_channels = CHANNELS;
     // Channel 5
@@ -176,7 +176,7 @@ static void V2x2_set_flags(uint16_t* flags)
     else *flags |= V2x2_FLAG_MAG_CAL_Y;
 }
 
-static uint8_t V2x2_convert_channel(uint8_t num)
+uint8_t V2x2_convert_channel(uint8_t num)
 {
     if(ppm[num]<PPM_MID)
         return map(ppm[num],PPM_MIN,PPM_MID,0x7F,0x00);
@@ -184,7 +184,7 @@ static uint8_t V2x2_convert_channel(uint8_t num)
         return map(ppm[num],PPM_MID,PPM_MAX,0x80,0xFF);
 }
 
-static void V2x2_send_packet(uint8_t bind)
+void V2x2_send_packet(uint8_t bind)
 {
     if (bind) {
         V2x2_flags     = V2x2_FLAG_BIND;

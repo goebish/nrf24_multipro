@@ -104,7 +104,7 @@ void SymaX_bind()
     digitalWrite(ledPin, HIGH);
 }
 
-static uint8_t SymaX_checksum(uint8_t *data)
+uint8_t SymaX_checksum(uint8_t *data)
 {
     uint8_t sum = data[0];
     for (uint8_t i=1; i < SYMAX_PACKET_SIZE-1; i++)
@@ -113,7 +113,7 @@ static uint8_t SymaX_checksum(uint8_t *data)
 }
 
 // channels determined by last byte of tx address
-static void SYMAX_set_channels(u8 address) {
+void SYMAX_set_channels(u8 address) {
     static const uint8_t start_chans_1[] = {0x0a, 0x1a, 0x2a, 0x3a};
     static const uint8_t start_chans_2[] = {0x2a, 0x0a, 0x42, 0x22};
     static const uint8_t start_chans_3[] = {0x1a, 0x3a, 0x12, 0x32};
@@ -144,7 +144,7 @@ static void SYMAX_set_channels(u8 address) {
     } 
 }
 
-static void SYMAX_build_packet(u8 bind) {
+void SYMAX_build_packet(u8 bind) {
     if (bind) {
         packet[0] = SYMAX_rx_tx_addr[4];
         packet[1] = SYMAX_rx_tx_addr[3];
@@ -187,7 +187,7 @@ static void SYMAX_build_packet(u8 bind) {
     packet[9] = SymaX_checksum(packet);
 }
 
-static void SYMAX_send_packet(uint8_t bind)
+void SYMAX_send_packet(uint8_t bind)
 {
     SYMAX_build_packet(bind);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);
@@ -200,7 +200,7 @@ static void SYMAX_send_packet(uint8_t bind)
     }
 }
 
-static void SYMAX_initialize_rx_tx_addr()
+void SYMAX_initialize_rx_tx_addr()
 {
     for(uint8_t i=0; i<4; i++)
         SYMAX_rx_tx_addr[i] = transmitterID[i];
