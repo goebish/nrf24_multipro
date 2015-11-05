@@ -34,6 +34,7 @@ typedef enum {
     PROTO_BAYANG,       //!< EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850
     PROTO_SYMAX5C1,     //!< Syma X5C-1 (not older X5C), X11, X11C, X12
     PROTO_YD829,        //!< YD-829, YD-829C, YD-822 ...
+    PROTO_H7_HIGH,      //!< high speed mode for EAchine H7, MoonTop M99xx
     PROTO_END
 } t_protocols;
 

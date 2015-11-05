@@ -23,8 +23,13 @@
 
 class protH7 : public protAPI {
     public:
-        protH7() {};
-        ~protH7() {}
+        t_protocols version;
+
+        protH7(t_protocols _version) {
+            version = _version;
+        };
+
+        ~protH7() {};
 
         void init(void);
         void bind(void);

@@ -36,7 +36,9 @@ protBAYANG BAYANG;
 protCX10_GREENBLUE CX10_BLUE = protCX10_GREENBLUE(PROTO_CX10_BLUE);
 protCX10_GREENBLUE CX10_GREEN = protCX10_GREENBLUE(PROTO_CX10_GREEN);
 
-protH7 H7;
+protH7 H7 = protH7(PROTO_H7);
+protH7 H7_HIGH = protH7(PROTO_H7_HIGH);
+
 protSYMAX SYMAX5C1;
 protCG023 YD829 = protCG023(PROTO_YD829);
 
@@ -49,5 +51,6 @@ protAPI * protocols[PROTO_END] = {
     &BAYANG,        //!< EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850
     &SYMAX5C1,      //!< Syma X5C-1 (not older X5C), X11, X11C, X12
     &YD829,         //!< YD-829, YD-829C, YD-822 ...
+    &H7_HIGH,       //!< high speed mode for EAchine H7, MoonTop M99xx
 };
 

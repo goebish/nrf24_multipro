@@ -32,7 +32,7 @@ static const uint8_t H7_freq[] = {
 };
 
 static const uint8_t H7_mys_byte[] = {
-    0x01, 0x11, 0x02, 0x12, 0x03, 0x13, 0x04, 0x14, 
+    0x01, 0x11, 0x02, 0x12, 0x03, 0x13, 0x04, 0x14,
     0x05, 0x15, 0x06, 0x16, 0x07, 0x17, 0x00, 0x10
 };
 
@@ -120,8 +120,12 @@ uint8_t H7_calcChecksum() {
     return result & 0xFF;
 }
 
-void H7_WritePacket() {
+
+uint32_t protH7::loop() {
+    uint32_t result = micros() + H7_PACKET_PERIOD;
+
     static uint8_t channel = 0;
+
     Ppacket[0] = multipro.getChannel(CH_THROTTLE, 0xE1, 0x00);
     Ppacket[1] = multipro.getChannel(CH_RUDDER, 0xE1, 0x00);
     Ppacket[2] = multipro.getChannel(CH_AILERON, 0x00, 0xE1);
@@ -137,7 +141,27 @@ void H7_WritePacket() {
 
     switch(multipro.getChannel3way(CH_3WAY)) {
         case -1:
-            Ppacket[6] |= H7_FLAG_RATE2;
+            if(version == PROTO_H7_HIGH) {
+                Ppacket[6] |= H7_FLAG_RATE1;
+
+                int eCal = Ppacket[4] - 0x1F;
+                int aCal = Ppacket[5] - 0x1F;
+
+                eCal += multipro.getChannel(CH_ELEVATOR, 0x3f, 0x00); // elevator trim 0x3f - 0x00
+                aCal += multipro.getChannel(CH_AILERON, 0x3f, 0x00); // aileron trim 0x3f - 0x00
+
+                if(eCal > 0x3F) eCal = 0x3F;
+                if(eCal < 0) eCal = 0;
+
+                if(aCal > 0x3F) aCal = 0x3F;
+                if(aCal < 0) aCal = 0;
+
+                Ppacket[4] = eCal;
+                Ppacket[5] = aCal;
+
+            } else {
+                Ppacket[6] |= H7_FLAG_RATE2;
+            }
             break;
         case 0:
             Ppacket[6] |= H7_FLAG_RATE1;
@@ -165,10 +189,6 @@ void H7_WritePacket() {
     if(channel > 15) {
         channel = 0;
     }
-}
 
-uint32_t protH7::loop() {
-    uint32_t result = micros() + H7_PACKET_PERIOD;
-    H7_WritePacket();
     return result;
 }

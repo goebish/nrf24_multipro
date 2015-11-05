@@ -139,7 +139,7 @@ void nrf24_multipro::setProtocol(t_protocols protocol) {
     }
 
     DEBUG_MULTI("[MR] setProtocol to: ");
-    DEBUG_MULTI(current_protocol);
+    DEBUG_MULTI(protocol);
     DEBUG_MULTI("\n");
     current_protocol = protocol;
 

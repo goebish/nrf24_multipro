@@ -11,7 +11,7 @@ Protocol selection by CH13
 | 5    | BAYANG                   | -73   |   1134      | EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850                         |
 | 6    | SYMAX5C1                 | -68   |   1159      | Syma X5C-1 (not older X5C), X11, X11C, X12                                      |
 | 7    | YD829                    | -63   |   1183      | YD-829, YD-829C, YD-822 ...                                                     |
-| 8    |                          | -59   |   1207      |                                                                                 |
+| 8    | H7_HIGH                  | -59   |   1207      | high speed mode for EAchine H7, MoonTop M99xx                                   |
 | 9    |                          | -54   |   1232      |                                                                                 |
 | 10   |                          | -49   |   1256      |                                                                                 |
 | 11   |                          | -44   |   1280      |                                                                                 |
