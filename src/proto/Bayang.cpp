@@ -107,10 +107,19 @@ static void send_packet(u8 bind)
     } else {
         Ppacket[0] = 0xa5;
         Ppacket[1] = 0xfa;   // normal mode is 0xf7, expert 0xfa
-        Ppacket[2] = GET_FLAG(CH_FLIP, BAYANG_FLAG_FLIP)
-                  | GET_FLAG(CH_HEADLESS, BAYANG_FLAG_HEADLESS)
-                  | GET_FLAG(CH_AUX6, BAYANG_FLAG_RTH);
-        packet[3] = GET_FLAG(CH_3WAY, BAYANG_FLAG_INVERT);
+        Ppacket[2] = GET_FLAG(CH_FLIP, BAYANG_FLAG_FLIP) | GET_FLAG(CH_HEADLESS, BAYANG_FLAG_HEADLESS);
+
+        switch(multipro.getChannel3way(CH_3WAY)) {
+            case -1:
+                break;
+            case 0:
+                Ppacket[3] = BAYANG_FLAG_INVERT;
+                break;
+            case 1:
+                Ppacket[2] |= BAYANG_FLAG_RTH;
+                break;
+        }
+
         chanval.value = multipro.getChannel(CH_AILERON, 0, 0x3ff);   // aileron
         Ppacket[4] = chanval.bytes.msb + DYNTRIM(chanval.value);
         Ppacket[5] = chanval.bytes.lsb;
@@ -124,6 +133,7 @@ static void send_packet(u8 bind)
         Ppacket[10] = chanval.bytes.msb + DYNTRIM(chanval.value);
         Ppacket[11] = chanval.bytes.lsb;
     }
+
     Ppacket[12] = transmitterID[2];
     Ppacket[13] = 0x0a;
     Ppacket[14] = 0;

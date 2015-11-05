@@ -46,26 +46,26 @@ void NRF24L01_Initialize()
 
 uint8_t NRF24L01_FlushTx()
 {
-    return spi_write_byte(FLUSH_TX);
+    return spi_write_byte(NRF24L01_E1_FLUSH_TX);
 }
 
 uint8_t NRF24L01_FlushRx()
 {
-    return spi_write_byte(FLUSH_RX);
+    return spi_write_byte(NRF24L01_E2_FLUSH_RX);
 }
 
 
 uint8_t NRF24L01_WritePayload(uint8_t *data, uint8_t length)
 {
     spi_CE_off();
-    NRF24L01_WriteRegisterMulti(W_TX_PAYLOAD, data, length);
+    NRF24L01_WriteRegisterMulti(NRF24L01_A0_TX_PAYLOAD, data, length);
     spi_CE_on(); // transmit
     return 1;
 }
 
 uint8_t NRF24L01_ReadPayload(uint8_t *data, uint8_t length)
 {
-    spi_read_address_bytes(R_RX_PAYLOAD, data, length); // Read RX payload
+    spi_read_address_bytes(NRF24L01_61_RX_PAYLOAD, data, length); // Read RX payload
     return 1;
 }
 
@@ -76,7 +76,7 @@ uint8_t NRF24L01_ReadReg(uint8_t reg)
 
 uint8_t NRF24L01_Activate(uint8_t code)
 {
-    spi_write_address(ACTIVATE, code);
+    spi_write_address(NRF24L01_50_ACTIVATE, code);
     return 1;
 }
 
@@ -115,7 +115,7 @@ uint8_t NRF24L01_Reset()
 {
     NRF24L01_FlushTx();
     NRF24L01_FlushRx();
-    uint8_t status1 = spi_write_byte(0xFF); // NOP
+    uint8_t status1 = spi_write_byte(NRF24L01_FF_NOP);
     uint8_t status2 = NRF24L01_ReadReg(0x07);
     NRF24L01_SetTxRxMode(TXRX_OFF);
     return (status1 == status2 && (status1 & 0x0f) == 0x0e);

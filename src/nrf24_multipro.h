@@ -33,12 +33,12 @@ typedef enum {
     CH_AILERON,     //!< (CH2)
     CH_ELEVATOR,    //!< (CH3)
     CH_RUDDER,      //!< (CH4)
-    CH_3WAY,        //!< (CH5)  led light, or 3 pos. rate on CX-10, H7, or inverted flight on H101
+    CH_3WAY,        //!< (CH5)  led light, or 3 pos. rate on CX-10, H7, or inverted flight on H101 (Bayang), RTH (Bayang)
     CH_FLIP,        //!< (CH6)  flip control
     CH_PIC,         //!< (CH7)  sill camera
     CH_CAM,         //!< (CH8)  video camera
     CH_HEADLESS,    //!< (CH9)  headless
-    CH_AUX6,        //!< (CH10) calibrate Y (V2x2), pitch trim (H7), RTH (Bayang)
+    CH_AUX6,        //!< (CH10) calibrate Y (V2x2), pitch trim (H7)
     CH_AUX7,        //!< (CH11) calibrate X (V2x2), roll trim (H7)
     CH_MAX_CONTROL  //!< 11 channel for all controles used
 } t_channelOrder;
