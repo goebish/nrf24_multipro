@@ -70,7 +70,7 @@ enum chan_order{
     AUX3,  // (CH7)  sill camera
     AUX4,  // (CH8)  video camera
     AUX5,  // (CH9)  headless
-    AUX6,  // (CH10) calibrate Y (V2x2), pitch trim (H7), RTH (Bayang)
+    AUX6,  // (CH10) calibrate Y (V2x2), pitch trim (H7), RTH (Bayang, H20), 360deg flip mode (H8-3D, H22)
     AUX7,  // (CH11) calibrate X (V2x2), roll trim (H7)
     AUX8,  // (CH12) Reset / Rebind
 };
@@ -81,6 +81,7 @@ enum chan_order{
 #define PPM_MAX 2000
 #define PPM_MIN_COMMAND 1300
 #define PPM_MAX_COMMAND 1700
+#define GET_FLAG(ch, mask) (ppm[ch] > PPM_MAX_COMMAND ? mask : 0)
 
 // supported protocols
 enum {
@@ -92,6 +93,7 @@ enum {
     PROTO_BAYANG,       // EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850, Floureon H101
     PROTO_SYMAX5C1,     // Syma X5C-1 (not older X5C), X11, X11C, X12
     PROTO_YD829,        // YD-829, YD-829C, YD-822 ...
+    PROTO_H8_3D,        // EAchine H8 mini 3D, JJRC H20, H22
     PROTO_END
 };
 
@@ -167,6 +169,9 @@ void loop()
         case PROTO_SYMAX5C1:
             timeout = process_SymaX();
             break;
+        case PROTO_H8_3D:
+            timeout = process_H8_3D();
+            break;
     }
     // updates ppm values out of ISR
     update_ppm();
@@ -208,8 +213,12 @@ void selectProtocol()
     
     // protocol selection
     
+    // Rudder right + Aileron left
+    if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND)
+        current_protocol = PROTO_H8_3D; // H8 mini 3D, H20 ...
+    
     // Elevator down + Aileron right
-    if(ppm[ELEVATOR] < PPM_MIN_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
+    else if(ppm[ELEVATOR] < PPM_MIN_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
         current_protocol = PROTO_YD829; // YD-829, YD-829C, YD-822 ...
     
     // Elevator down + Aileron left
@@ -280,6 +289,10 @@ void init_protocol()
         case PROTO_SYMAX5C1:
             Symax_init();
             SymaX_bind();
+            break;
+        case PROTO_H8_3D:
+            H8_3D_init();
+            H8_3D_bind();
             break;
     }
 }
