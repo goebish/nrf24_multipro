@@ -39,7 +39,7 @@ enum{
 uint32_t process_Bayang()
 {
     uint32_t timeout = micros() + BAYANG_PACKET_PERIOD;
-    send_packet(0);
+    Bayang_send_packet(0);
     return timeout;
 }
 
@@ -76,7 +76,7 @@ void Bayang_bind()
 {
     uint16_t counter = BAYANG_BIND_COUNT;
     while(counter) {
-        send_packet(1);
+        Bayang_send_packet(1);
         delayMicroseconds(BAYANG_PACKET_PERIOD);
         digitalWrite(ledPin, counter-- & 0x10);
     }
@@ -85,9 +85,8 @@ void Bayang_bind()
 }
 
 #define DYNTRIM(chval) ((u8)((chval >> 2) & 0xfc))
-#define GET_FLAG(ch, mask) (ppm[ch] > PPM_MAX_COMMAND ? mask : 0)
 
-void send_packet(u8 bind)
+void Bayang_send_packet(u8 bind)
 {
     union {
         u16 value;
