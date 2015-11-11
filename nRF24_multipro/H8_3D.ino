@@ -29,9 +29,9 @@ enum {
     H8_3D_FLAG_RTH      = 0x20, // 360° flip mode on H8 3D, RTH on JJRC H20
 };
 
-static uint8_t  H8_3D_txid[4] = { 0xae, 0xb8, 0x0b, 0x10}; // only 1 fixed id for now ...
+static uint8_t  H8_3D_txid[4];
 static uint8_t  H8_3D_rf_chan;
-static uint8_t  H8_3D_rf_channels[H8_3D_RF_NUM_CHANNELS] = { 0x0f, 0x19, 0x2f, 0x34};
+static uint8_t  H8_3D_rf_channels[H8_3D_RF_NUM_CHANNELS];
 static const uint8_t  H8_3D_rx_tx_addr[H8_3D_ADDRESS_LENGTH] = { 0xc4, 0x57, 0x09, 0x65, 0x21};
 
 uint32_t process_H8_3D()
@@ -75,21 +75,21 @@ void H8_3D_send_packet(uint8_t  bind)
         packet[6] = 0x08;
         packet[7] = 0x03;
         packet[9] = map(ppm[THROTTLE], PPM_MIN, PPM_MAX, 0, 0xff); // throttle
-    if( ppm[RUDDER] > PPM_MID)
-        packet[10] = map(ppm[RUDDER], PPM_MID, PPM_MAX, 0, 0x3c); // rudder
-    else
-        packet[10] = map(ppm[RUDDER], PPM_MID, PPM_MIN, 0x80, 0xbc); // rudder
-    packet[11] = map(ppm[ELEVATOR], PPM_MIN, PPM_MAX, 0x43, 0xbb); // elevator
-    packet[12] = map(ppm[AILERON], PPM_MIN, PPM_MAX, 0xbb, 0x43); // aileron
-    // neutral trims
-    packet[13] = 0x20;
-    packet[14] = 0x20;
-    packet[15] = 0x20;
-    packet[16] = 0x20;
-    packet[17] = H8_3D_FLAG_RATE_HIGH
-               | GET_FLAG( AUX2, H8_3D_FLAG_FLIP)
-               | GET_FLAG( AUX5, H8_3D_FLAG_HEADLESS) // RTH+Headless on H8 3D
-               | GET_FLAG( AUX6, H8_3D_FLAG_RTH); // 180/360 flip mode on H8 3D
+        if( ppm[RUDDER] > PPM_MID)
+            packet[10] = map(ppm[RUDDER], PPM_MID, PPM_MAX, 0, 0x3c); // rudder
+        else
+            packet[10] = map(ppm[RUDDER], PPM_MID, PPM_MIN, 0x80, 0xbc); // rudder
+        packet[11] = map(ppm[ELEVATOR], PPM_MIN, PPM_MAX, 0x43, 0xbb); // elevator
+        packet[12] = map(ppm[AILERON], PPM_MIN, PPM_MAX, 0xbb, 0x43); // aileron
+        // neutral trims
+        packet[13] = 0x20;
+        packet[14] = 0x20;
+        packet[15] = 0x20;
+        packet[16] = 0x20;
+        packet[17] = H8_3D_FLAG_RATE_HIGH
+                   | GET_FLAG( AUX2, H8_3D_FLAG_FLIP)
+                   | GET_FLAG( AUX5, H8_3D_FLAG_HEADLESS) // RTH+Headless on H8 3D
+                   | GET_FLAG( AUX6, H8_3D_FLAG_RTH); // 180/360 flip mode on H8 3D
     }
     packet[18] = 0x00;
     packet[19] = H8_3D_checksum(); // data checksum
@@ -109,6 +109,18 @@ void H8_3D_send_packet(uint8_t  bind)
 
 void H8_3D_init()
 {
+    // tx id
+    H8_3D_txid[0] = 0xa0 + (transmitterID[0] % 0x10);
+    H8_3D_txid[1] = 0xb0 + (transmitterID[1] % 0x20);
+    H8_3D_txid[2] = (transmitterID[2] % 0x20);
+    H8_3D_txid[3] = (transmitterID[3] % 0x11);
+    
+    // rf channels
+    H8_3D_rf_channels[0] = 0x06 + (((H8_3D_txid[0]>>8) + (H8_3D_txid[0]&0x0f)) % 0x0f);
+    H8_3D_rf_channels[1] = 0x15 + (((H8_3D_txid[1]>>8) + (H8_3D_txid[1]&0x0f)) % 0x0f);
+    H8_3D_rf_channels[2] = 0x24 + (((H8_3D_txid[2]>>8) + (H8_3D_txid[2]&0x0f)) % 0x0f);
+    H8_3D_rf_channels[3] = 0x33 + (((H8_3D_txid[3]>>8) + (H8_3D_txid[3]&0x0f)) % 0x0f);
+    
     NRF24L01_Initialize();
     NRF24L01_SetTxRxMode(TX_EN);
 
@@ -126,6 +138,4 @@ void H8_3D_init()
     NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);      // Disable dynamic payload length on all pipes
     NRF24L01_WriteReg(NRF24L01_1D_FEATURE, 0x01);
     NRF24L01_Activate(0x73);
-
-    // todo: txid/rf channels relationship
 }
