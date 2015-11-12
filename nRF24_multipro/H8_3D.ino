@@ -29,6 +29,11 @@ enum {
     H8_3D_FLAG_RTH      = 0x20, // 360° flip mode on H8 3D, RTH on JJRC H20
 };
 
+enum {
+    // flags going to packet[18]
+    H8_3D_FLAG_CALIBRATE= 0x20, // accelerometer calibration
+};
+
 static uint8_t  H8_3D_txid[4];
 static uint8_t  H8_3D_rf_chan;
 static uint8_t  H8_3D_rf_channels[H8_3D_RF_NUM_CHANNELS];
@@ -65,11 +70,11 @@ void H8_3D_send_packet(uint8_t  bind)
     packet[0] = 0x13;
     memcpy(&packet[1], H8_3D_txid, 4);
     packet[8] = H8_3D_txid[0]+H8_3D_txid[1]+H8_3D_txid[2]+H8_3D_txid[3]; // txid checksum
+    memset( &packet[9], 0, 10);
     if (bind) {
         packet[5] = 0x00;
         packet[6] = 0x00;
         packet[7] = 0x01;
-        memset( &packet[9], 0, 10);
     } else {
         packet[5] = H8_3D_rf_chan;
         packet[6] = 0x08;
@@ -90,6 +95,8 @@ void H8_3D_send_packet(uint8_t  bind)
                    | GET_FLAG( AUX2, H8_3D_FLAG_FLIP)
                    | GET_FLAG( AUX5, H8_3D_FLAG_HEADLESS) // RTH+Headless on H8 3D
                    | GET_FLAG( AUX6, H8_3D_FLAG_RTH); // 180/360 flip mode on H8 3D
+        if(packet[9] == 0x00 && packet[10] >= 0xb6 && packet[11] <= 0x49 && packet[12] >= 0xb5)
+            packet[18] |= H8_3D_FLAG_CALIBRATE;
     }
     packet[18] = 0x00;
     packet[19] = H8_3D_checksum(); // data checksum
