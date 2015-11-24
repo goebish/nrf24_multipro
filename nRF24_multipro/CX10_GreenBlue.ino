@@ -150,13 +150,20 @@ void CX10_Write_Packet(uint8_t init)
     packet[12+offset]= highByte(ppm[RUDDER]);
     if(ppm[AUX2] > PPM_MID)
         packet[12+offset] |= 0x10; // flip flag
-    // rate / mode (use headless channel)
-    if(ppm[AUX1] > PPM_MAX_COMMAND) // mode 3 / headless
+    // rate / mode
+    if(ppm[AUX1] > PPM_MAX_COMMAND) // mode 3 / headless on CX-10A
         packet[13+offset] = 0x02;
     else if(ppm[AUX1] < PPM_MIN_COMMAND) // mode 1
         packet[13+offset] = 0x00;
     else // mode 2
         packet[13+offset] = 0x01;
     packet[14+offset] = 0x00;
+    // snapshot (CX10-C)
+    if(ppm[AUX3] < PPM_MAX_COMMAND)
+        packet[13] |= 0x10;
+    // video recording (CX10-C)
+    if(ppm[AUX4] > PPM_MAX_COMMAND)
+        packet[13] |= 0x08;
+
     XN297_WritePayload(packet, CX10_packet_length);
 }

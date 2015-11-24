@@ -87,7 +87,7 @@ enum chan_order{
 enum {
     PROTO_V2X2 = 0,     // WLToys V2x2, JXD JD38x, JD39x, JJRC H6C, Yizhan Tarantula X6 ...
     PROTO_CG023,        // EAchine CG023, CG032, 3D X4
-    PROTO_CX10_BLUE,    // Cheerson CX-10 blue board, newer red board, CX-10A, Floureon FX-10, CX-Stars (todo: add DM007 variant)
+    PROTO_CX10_BLUE,    // Cheerson CX-10 blue board, newer red board, CX-10A, CX-10C, Floureon FX-10, CX-Stars (todo: add DM007 variant)
     PROTO_CX10_GREEN,   // Cheerson CX-10 green board
     PROTO_H7,           // EAchine H7, MoonTop M99xx
     PROTO_BAYANG,       // EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850, Floureon H101
