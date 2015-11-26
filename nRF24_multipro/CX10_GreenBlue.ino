@@ -158,12 +158,14 @@ void CX10_Write_Packet(uint8_t init)
     else // mode 2
         packet[13+offset] = 0x01;
     packet[14+offset] = 0x00;
-    // snapshot (CX10-C)
-    if(ppm[AUX3] < PPM_MAX_COMMAND)
-        packet[13] |= 0x10;
-    // video recording (CX10-C)
-    if(ppm[AUX4] > PPM_MAX_COMMAND)
-        packet[13] |= 0x08;
+    if(current_protocol == PROTO_CX10_BLUE) {
+        // snapshot (CX10-C)
+        if(ppm[AUX3] < PPM_MAX_COMMAND)
+            packet[13+offset] |= 0x10;
+        // video recording (CX10-C)
+        if(ppm[AUX4] > PPM_MAX_COMMAND)
+            packet[13+offset] |= 0x08;
+    }    
 
     XN297_WritePayload(packet, CX10_packet_length);
 }
