@@ -15,7 +15,7 @@ Elevator up + Aileron left = EAchine H7
 Elevator up = WLToys V202/252/272, JXD 385/388, JJRC H6C, Yizhan Tarantula X6 ...  
 Elevator down = EAchine CG023/CG031/3D X4  
 Aileron left = Cheerson CX-10 green pcb  
-Aileron right = Cheerson CX-10 blue pcb & some newer red pcb, CX-10A, CX-10C, CX11, CX12  
+Aileron right = Cheerson CX-10 blue pcb & some newer red pcb, CX-10A, CX-10C, CX11, CX12, Floureon FX10, JJRC DHD D1  
 
 Last used protocol is automatically selected if stick is in neutral position.
 
