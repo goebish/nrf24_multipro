@@ -64,7 +64,7 @@ void Bayang_init()
     NRF24L01_WriteReg(NRF24L01_03_SETUP_AW, 0x03);
     NRF24L01_WriteReg(NRF24L01_04_SETUP_RETR, 0x00); // no retransmits
     NRF24L01_SetBitrate(NRF24L01_BR_1M);             // 1Mbps
-    NRF24L01_SetPower(3);
+    NRF24L01_SetPower(RF_POWER);
     NRF24L01_Activate(0x73);                         // Activate feature register
     NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);      // Disable dynamic payload length on all pipes
     NRF24L01_WriteReg(NRF24L01_1D_FEATURE, 0x01);

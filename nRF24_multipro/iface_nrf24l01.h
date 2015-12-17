@@ -97,6 +97,15 @@ enum TXRX_State {
     RX_EN,
 };
 
+// RF Tx Power (estimations with RFX2401C PA)
+// RFX2401C power amp is ~+25dB (saturates at 22dBm) so:
+enum TX_Power {
+    TX_POWER_5mW = 0, // -18+25  =  7dBm ~= 5mW 
+    TX_POWER_20mW,    // -12+25  = 13dBm ~= 20mW
+    TX_POWER_80mW,    // -6+25   = 19dBm ~= 80mW
+    TX_POWER_158mW    // +25(sat)= 22dBm ~= 158mW
+};
+
 /* Instruction Mnemonics */
 #define R_REGISTER    0x00
 #define W_REGISTER    0x20
@@ -109,6 +118,5 @@ enum TXRX_State {
 #define FLUSH_TX      0xE1
 #define FLUSH_RX      0xE2
 #define REUSE_TX_PL   0xE3
-//#define NOP           0xFF 
 
 #endif

@@ -140,8 +140,7 @@ uint8_t NRF24L01_Reset()
     return (status1 == status2 && (status1 & 0x0f) == 0x0e);
 }
 
-// Power is in range 0..3 for nRF24L01
-uint8_t NRF24L01_SetPower(uint8_t power)
+uint8_t NRF24L01_SetPower(enum TX_Power power)
 {
     rf_setup = (rf_setup & 0xF9) | ((power & 0x03) << 1);
     return NRF24L01_WriteReg(NRF24L01_06_RF_SETUP, rf_setup);

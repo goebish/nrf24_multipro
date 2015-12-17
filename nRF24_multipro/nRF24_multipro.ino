@@ -56,7 +56,7 @@
 // SPI input
 #define  MISO_on (PINC & _BV(0)) // PC0
 
-#define RF_POWER 2 // 0-3, it was found that using maximum power can cause some issues, so let's use 2... 
+#define RF_POWER TX_POWER_80mW 
 
 // PPM stream settings
 #define CHANNELS 12 // number of channels in ppm stream, 12 ideally
