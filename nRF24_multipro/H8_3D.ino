@@ -25,6 +25,7 @@ enum {
     H8_3D_FLAG_FLIP     = 0x01,
     H8_3D_FLAG_RATE_MID = 0x02,
     H8_3D_FLAG_RATE_HIGH= 0x04,
+    H8_3D_FLAG_LED      = 0x08, // Light on H22
     H8_3D_FLAG_HEADLESS = 0x10, // RTH + headless on H8, headless on JJRC H20
     H8_3D_FLAG_RTH      = 0x20, // 360° flip mode on H8 3D, RTH on JJRC H20
 };
@@ -92,6 +93,7 @@ void H8_3D_send_packet(uint8_t  bind)
         packet[15] = 0x20;
         packet[16] = 0x20;
         packet[17] = H8_3D_FLAG_RATE_HIGH
+                   | GET_FLAG( AUX1, H8_3D_FLAG_LED) // JJRC H22
                    | GET_FLAG( AUX2, H8_3D_FLAG_FLIP)
                    | GET_FLAG( AUX5, H8_3D_FLAG_HEADLESS) // RTH+Headless on H8 3D
                    | GET_FLAG( AUX6, H8_3D_FLAG_RTH); // 180/360 flip mode on H8 3D
