@@ -24,6 +24,7 @@
 #include "proto/CX10_GREENBLUE.h"
 #include "proto/H7.h"
 #include "proto/SYMAX.h"
+#include "proto/H8_3D.h"
 
 /**
  * global packed buffer
@@ -42,7 +43,7 @@ protH7 H7_HIGH = protH7(PROTO_H7_HIGH);
 protSYMAX SYMAX5C1;
 protCG023 YD829 = protCG023(PROTO_YD829);
 
-protH83D H8_3D;
+proH8_3D H8_3D;
 
 protAPI * protocols[PROTO_END] = {
     &V2x2,          //!< WLToys V2x2, JXD JD38x, JD39x, JJRC H6C, Yizhan Tarantula X6 ...

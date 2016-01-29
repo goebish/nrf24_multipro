@@ -25,7 +25,7 @@
 
 #define DEBUG_MULTI(text) Serial.print(text);
 
-#define RF_POWER 2 // 0-3, it was found that using maximum power can cause some issues, so let's use 2...
+#define RF_POWER TX_POWER_80mW // 0-3, it was found that using maximum power can cause some issues, so let's use 2...
 
 // PPM stream settings
 typedef enum {
