@@ -1,5 +1,5 @@
 # nrf24-multipro
-nRF24L01 multi-protocol RC transmitter
+nRF24L01 multi-protocol RC transmitter library
 
 ![Screenshot](http://i.imgur.com/AeMJKzT.jpg)
 
