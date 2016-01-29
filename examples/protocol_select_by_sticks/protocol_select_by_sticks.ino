@@ -228,9 +228,12 @@ void selectProtocol(void)
         multipro.set_txid(true);                      // Renew Transmitter ID
     
     // protocol selection
+    // Rudder right + Aileron left
+    if(ppm[CH_RUDDER] > PPM_MAX_COMMAND && ppm[CH_AILERON] < PPM_MIN_COMMAND)
+        current_protocol = PROTO_H8_3D; // H8 mini 3D, H20 ...
     
     // Elevator down + Aileron right
-    if(ppm[CH_ELEVATOR] < PPM_MIN_COMMAND && ppm[CH_AILERON] > PPM_MAX_COMMAND)
+    else if(ppm[CH_ELEVATOR] < PPM_MIN_COMMAND && ppm[CH_AILERON] > PPM_MAX_COMMAND)
         current_protocol = PROTO_YD829; // YD-829, YD-829C, YD-822 ...
     
     // Elevator down + Aileron left
@@ -239,7 +242,7 @@ void selectProtocol(void)
     
     // Elevator up + Aileron right
     else if(ppm[CH_ELEVATOR] > PPM_MAX_COMMAND && ppm[CH_AILERON] > PPM_MAX_COMMAND)
-        current_protocol = PROTO_BAYANG;    // EAchine H8 mini, BayangToys X6/X7/X9, JJRC JJ850 ...
+        current_protocol = PROTO_BAYANG;    // EAchine H8(C) mini, BayangToys X6/X7/X9, JJRC JJ850 ...
     
     // Elevator up + Aileron left
     else if(ppm[CH_ELEVATOR] > PPM_MAX_COMMAND && ppm[CH_AILERON] < PPM_MIN_COMMAND)

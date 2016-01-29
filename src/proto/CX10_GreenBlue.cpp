@@ -150,6 +150,17 @@ void protCX10_GREENBLUE::CX10_Write_Packet(uint8_t init) {
             break;
     }
 
+    if(version == PROTO_CX10_BLUE) {
+        // snapshot (CX10-C)
+        if(multipro.getChannelIsCMD(CH_PIC)) {
+            Ppacket[13 + offset] |= 0x10;
+        }
+        // video recording (CX10-C)
+        if(multipro.getChannelIsCMD(CH_CAM)) {
+            Ppacket[13 + offset] |= 0x08;
+        }
+    }
+
     Ppacket[14 + offset] = 0x00;
     XN297_WritePayload(Ppacket, CX10_packet_length);
 }

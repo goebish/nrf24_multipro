@@ -42,15 +42,18 @@ protH7 H7_HIGH = protH7(PROTO_H7_HIGH);
 protSYMAX SYMAX5C1;
 protCG023 YD829 = protCG023(PROTO_YD829);
 
+protH83D H8_3D;
+
 protAPI * protocols[PROTO_END] = {
     &V2x2,          //!< WLToys V2x2, JXD JD38x, JD39x, JJRC H6C, Yizhan Tarantula X6 ...
     &CG023,         //!< EAchine CG023, CG032, 3D X4
-    &CX10_BLUE,     //!< Cheerson CX-10 blue board, newer red board, CX-10A, Floureon FX-10, CX-Stars (todo: add DM007 variant)
+    &CX10_BLUE,     //!< Cheerson CX-10 blue board, newer red board, CX-10A, CX-10C, Floureon FX-10, CX-Stars (todo: add DM007 variant)
     &CX10_GREEN,    //!< Cheerson CX-10 green board
     &H7,            //!< EAchine H7, MoonTop M99xx
-    &BAYANG,        //!< EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850, Floureon H101
+    &BAYANG,        //!<  EAchine H8(C) mini, H10, BayangToys X6, X7, X9, JJRC JJ850, Floureon H101
     &SYMAX5C1,      //!< Syma X5C-1 (not older X5C), X11, X11C, X12
     &YD829,         //!< YD-829, YD-829C, YD-822 ...
     &H7_HIGH,       //!< high speed mode for EAchine H7, MoonTop M99xx
+    &H8_3D          //!< EAchine H8 mini 3D, JJRC H20, H22
 };
 

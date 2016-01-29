@@ -27,6 +27,8 @@ enum{
     BAYANG_FLAG_RTH      = 0x01,
     BAYANG_FLAG_HEADLESS = 0x02,
     BAYANG_FLAG_FLIP     = 0x08,
+    BAYANG_FLAG_VIDEO    = 0x10,
+    BAYANG_FLAG_SNAPSHOT = 0x20,
 };
 
 enum{
@@ -65,7 +67,7 @@ void protBAYANG::init()
     NRF24L01_WriteReg(NRF24L01_03_SETUP_AW, 0x03);
     NRF24L01_WriteReg(NRF24L01_04_SETUP_RETR, 0x00); // no retransmits
     NRF24L01_SetBitrate(NRF24L01_BR_1M);             // 1Mbps
-    NRF24L01_SetPower(3);
+    NRF24L01_SetPower(RF_POWER);
     NRF24L01_Activate(0x73);                         // Activate feature register
     NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);      // Disable dynamic payload length on all pipes
     NRF24L01_WriteReg(NRF24L01_1D_FEATURE, 0x01);
@@ -107,7 +109,7 @@ static void send_packet(u8 bind)
     } else {
         Ppacket[0] = 0xa5;
         Ppacket[1] = 0xfa;   // normal mode is 0xf7, expert 0xfa
-        Ppacket[2] = GET_FLAG(CH_FLIP, BAYANG_FLAG_FLIP) | GET_FLAG(CH_HEADLESS, BAYANG_FLAG_HEADLESS);
+        Ppacket[2] = GET_FLAG(CH_FLIP, BAYANG_FLAG_FLIP) | GET_FLAG(CH_HEADLESS, BAYANG_FLAG_HEADLESS) | GET_FLAG(CH_PIC, BAYANG_FLAG_SNAPSHOT) | GET_FLAG(CH_CAM, BAYANG_FLAG_VIDEO);
 
         switch(multipro.getChannel3way(CH_3WAY)) {
             case -1:
@@ -119,6 +121,7 @@ static void send_packet(u8 bind)
                 Ppacket[2] |= BAYANG_FLAG_RTH;
                 break;
         }
+
 
         chanval.value = multipro.getChannel(CH_AILERON, 0, 0x3ff);   // aileron
         Ppacket[4] = chanval.bytes.msb + DYNTRIM(chanval.value);

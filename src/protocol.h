@@ -28,13 +28,14 @@ extern uint8_t Ppacket[32];
 typedef enum {
     PROTO_V2X2 = 0,     //!< WLToys V2x2, JXD JD38x, JD39x, JJRC H6C, Yizhan Tarantula X6 ...
     PROTO_CG023,        //!< EAchine CG023, CG032, 3D X4
-    PROTO_CX10_BLUE,    //!< Cheerson CX-10 blue board, newer red board, CX-10A, Floureon FX-10, CX-Stars (todo: add DM007 variant)
+    PROTO_CX10_BLUE,    //!< Cheerson CX-10 blue board, newer red board, CX-10A, CX-10C, Floureon FX-10, CX-Stars (todo: add DM007 variant)
     PROTO_CX10_GREEN,   //!< Cheerson CX-10 green board
     PROTO_H7,           //!< EAchine H7, MoonTop M99xx
-    PROTO_BAYANG,       //!< EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850, Floureon H101
+    PROTO_BAYANG,       //!< EAchine H8(C) mini, H10, BayangToys X6, X7, X9, JJRC JJ850, Floureon H101
     PROTO_SYMAX5C1,     //!< Syma X5C-1 (not older X5C), X11, X11C, X12
     PROTO_YD829,        //!< YD-829, YD-829C, YD-822 ...
     PROTO_H7_HIGH,      //!< high speed mode for EAchine H7, MoonTop M99xx
+    PROTO_H8_3D,        //!< EAchine H8 mini 3D, JJRC H20, H22
     PROTO_END
 } t_protocols;
 

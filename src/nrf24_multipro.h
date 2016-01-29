@@ -35,7 +35,7 @@ typedef enum {
     CH_RUDDER,      //!< (CH4)
     CH_3WAY,        //!< (CH5)  led light, or 3 pos. rate on CX-10, H7, or inverted flight on H101 (Bayang), RTH (Bayang)
     CH_FLIP,        //!< (CH6)  flip control
-    CH_PIC,         //!< (CH7)  sill camera
+    CH_PIC,         //!< (CH7)  still camera
     CH_CAM,         //!< (CH8)  video camera
     CH_HEADLESS,    //!< (CH9)  headless
     CH_AUX6,        //!< (CH10) calibrate Y (V2x2), pitch trim (H7)

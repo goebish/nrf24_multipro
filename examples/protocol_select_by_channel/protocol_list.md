@@ -5,14 +5,14 @@ Protocol selection by CH13
 |:----:|:-------------------------|:------|:------------|:--------------------------------------------------------------------------------|
 | 0    | V2X2                     | -98   |   1012      | WLToys V2x2, JXD JD38x, JD39x, JJRC H6C, Yizhan Tarantula X6 ...                |
 | 1    | CG023                    | -93   |   1037      | EAchine CG023, CG032, 3D X4                                                     |
-| 2    | CX10_BLUE                | -88   |   1061      | Cheerson CX-10 blue board, newer red board, CX-10A, Floureon FX-10, CX-Stars    |
+| 2    | CX10_BLUE                | -88   |   1061      | Cheerson CX-10 blue board, newer red board, CX-10A, CX-10C, Floureon FX-10, CX-Stars    |
 | 3    | CX10_GREEN               | -83   |   1085      | Cheerson CX-10 green board                                                      |
 | 4    | H7                       | -78   |   1110      | EAchine H7, MoonTop M99xx                                                       |
-| 5    | BAYANG                   | -73   |   1134      | EAchine H8 mini, H10, BayangToys X6, X7, X9, JJRC JJ850                         |
+| 5    | BAYANG                   | -73   |   1134      | EAchine H8 mini(C), H10, BayangToys X6, X7, X9, JJRC JJ850, Floureon H101       |
 | 6    | SYMAX5C1                 | -68   |   1159      | Syma X5C-1 (not older X5C), X11, X11C, X12                                      |
 | 7    | YD829                    | -63   |   1183      | YD-829, YD-829C, YD-822 ...                                                     |
 | 8    | H7_HIGH                  | -59   |   1207      | high speed mode for EAchine H7, MoonTop M99xx                                   |
-| 9    |                          | -54   |   1232      |                                                                                 |
+| 9    | H8_3D                    | -54   |   1232      | EAchine H8 mini 3D, JJRC H20, H22                                               |
 | 10   |                          | -49   |   1256      |                                                                                 |
 | 11   |                          | -44   |   1280      |                                                                                 |
 | 12   |                          | -39   |   1305      |                                                                                 |
