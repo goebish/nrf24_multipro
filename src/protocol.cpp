@@ -20,10 +20,10 @@
 
 #include "proto/V2x2.h"
 #include "proto/CG023.h"
-#include "proto/BAYANG.h"
-#include "proto/CX10_GREENBLUE.h"
+#include "proto/Bayang.h"
+#include "proto/CX10_GreenBlue.h"
 #include "proto/H7.h"
-#include "proto/SYMAX.h"
+#include "proto/SymaX.h"
 #include "proto/H8_3D.h"
 
 /**
