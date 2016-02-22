@@ -124,7 +124,7 @@ uint8_t NRF24L01_ReadReg(uint8_t reg);
 uint8_t NRF24L01_Activate(uint8_t code);
 void NRF24L01_SetTxRxMode(t_TXRX_State mode);
 uint8_t NRF24L01_Reset();
-uint8_t NRF24L01_SetPower(uint8_t power);
+uint8_t NRF24L01_SetPower(t_TX_Power power);
 uint8_t NRF24L01_SetBitrate(uint8_t bitrate);
 
 #endif
