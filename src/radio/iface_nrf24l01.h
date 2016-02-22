@@ -54,8 +54,8 @@ enum {
     NRF24L01_E3_REUSE_TX_PL = 0xE3,
     NRF24L01_50_ACTIVATE    = 0x50,
     NRF24L01_60_R_RX_PL_WID = 0x60,
-    NRF24L01_B0_TX_PYLD_NOACK = 0xB0,
-    NRF24L01_FF_NOP         = 0xFF,
+    NRF24L01_B0_TX_PYLD_NOACK  = 0xB0,
+    NRF24L01_FF_NOP            = 0xFF,
     NRF24L01_A8_W_ACK_PAYLOAD0 = 0xA8,
     NRF24L01_A8_W_ACK_PAYLOAD1 = 0xA9,
     NRF24L01_A8_W_ACK_PAYLOAD2 = 0xAA,
@@ -91,32 +91,40 @@ enum {
     NRF24L01_BR_RSVD
 };
 
-enum TXRX_State {
+typedef enum TXRX_State {
     TXRX_OFF,
     TX_EN,
     RX_EN,
-};
+} t_TXRX_State;
 
 // RF Tx Power (estimations with RFX2401C PA)
 // RFX2401C power amp is ~+25dB (saturates at 22dBm) so:
-enum TX_Power {
-    TX_POWER_5mW = 0, // -18+25  =  7dBm ~= 5mW 
+typedef enum TX_Power {
+    TX_POWER_5mW = 0, // -18+25  =  7dBm ~= 5mW
     TX_POWER_20mW,    // -12+25  = 13dBm ~= 20mW
     TX_POWER_80mW,    // -6+25   = 19dBm ~= 80mW
     TX_POWER_158mW    // +25(sat)= 22dBm ~= 158mW
-};
+} t_TX_Power;
 
 /* Instruction Mnemonics */
 #define R_REGISTER    0x00
 #define W_REGISTER    0x20
-#define REGISTER_MASK 0x1F
-#define ACTIVATE      0x50
-#define R_RX_PL_WID   0x60
-#define R_RX_PAYLOAD  0x61
-#define W_TX_PAYLOAD  0xA0
-#define W_ACK_PAYLOAD 0xA8
-#define FLUSH_TX      0xE1
-#define FLUSH_RX      0xE2
-#define REUSE_TX_PL   0xE3
+//#define REGISTER_MASK 0x1F
+
+
+uint8_t NRF24L01_WriteReg(uint8_t address, uint8_t data);
+void NRF24L01_WriteRegisterMulti(uint8_t address, const uint8_t data[], uint8_t len);
+void NRF24L01_ReadRegisterMulti(uint8_t address, const uint8_t data[], uint8_t len);
+void NRF24L01_Initialize();
+uint8_t NRF24L01_FlushTx();
+uint8_t NRF24L01_FlushRx();
+uint8_t NRF24L01_WritePayload(uint8_t *data, uint8_t length);
+uint8_t NRF24L01_ReadPayload(uint8_t *data, uint8_t length);
+uint8_t NRF24L01_ReadReg(uint8_t reg);
+uint8_t NRF24L01_Activate(uint8_t code);
+void NRF24L01_SetTxRxMode(t_TXRX_State mode);
+uint8_t NRF24L01_Reset();
+uint8_t NRF24L01_SetPower(t_TX_Power power);
+uint8_t NRF24L01_SetBitrate(uint8_t bitrate);
 
 #endif

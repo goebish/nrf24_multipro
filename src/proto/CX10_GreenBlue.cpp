@@ -13,23 +13,14 @@
  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define CX10_GREEN_PACKET_LENGTH 15
-#define CX10_BLUE_PACKET_LENGTH 19
-#define CX10_BLUE_PACKET_PERIOD 6000
-#define CX10_GREEN_PACKET_PERIOD 3000
-#define CX10_GREEN_BIND_COUNT 1000
-#define CX10_RF_BIND_CHANNEL 0x02
-#define CX10_NUM_RF_CHANNELS    4
+#include <Arduino.h>
+#include "nrf24_multipro.h"
+#include "protocol.h"
+#include "CX10_GreenBlue.h"
 
-static uint8_t CX10_txid[4]; // transmitter ID
-static uint8_t CX10_freq[4]; // frequency hopping table
-static uint8_t CX10_current_chan = 0;
-static uint8_t CX10_packet_length;
-static uint32_t CX10_packet_period;
-static const uint8_t CX10_tx_rx_id[] = {0xCC,0xCC,0xCC,0xCC,0xCC};
+static const uint8_t CX10_tx_rx_id[] = { 0xCC, 0xCC, 0xCC, 0xCC, 0xCC };
 
-uint32_t process_CX10()
-{
+uint32_t protCX10_GREENBLUE::loop() {
     uint32_t nextPacket = micros() + CX10_packet_period;
     XN297_Configure(_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP));
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);     // Clear data ready, data sent, and retransmit
@@ -40,13 +31,12 @@ uint32_t process_CX10()
     return nextPacket;
 }
 
-void CX10_init()
-{
+void protCX10_GREENBLUE::init() {
     uint8_t i;
-    switch(current_protocol) {
+    switch(version) {
         case PROTO_CX10_BLUE:
-            for(i=0; i<4; i++) {
-                packet[5+i] = 0xFF; // clear aircraft ID
+            for(i = 0; i < 4; i++) {
+                Ppacket[5 + i] = 0xFF; // clear aircraft ID
             }
             CX10_packet_length = CX10_BLUE_PACKET_LENGTH;
             CX10_packet_period = CX10_BLUE_PACKET_PERIOD;
@@ -57,7 +47,7 @@ void CX10_init()
             break;
     }
 
-    for(i=0; i<4; i++) {
+    for(i = 0; i < 4; i++) {
         CX10_txid[i] = transmitterID[i];
     }
     CX10_txid[1] &= 0x2F;
@@ -71,8 +61,8 @@ void CX10_init()
     NRF24L01_Initialize();
     NRF24L01_SetTxRxMode(TX_EN);
     delay(10);
-    XN297_SetTXAddr(CX10_tx_rx_id,5);
-    XN297_SetRXAddr(CX10_tx_rx_id,5);
+    XN297_SetTXAddr(CX10_tx_rx_id, 5);
+    XN297_SetRXAddr(CX10_tx_rx_id, 5);
     NRF24L01_FlushTx();
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);     // Clear data ready, data sent, and retransmit
     NRF24L01_WriteReg(NRF24L01_01_EN_AA, 0x00);      // No Auto Acknowledgment on all data pipes
@@ -85,10 +75,9 @@ void CX10_init()
     delay(150);
 }
 
-void CX10_bind()
-{
-    uint16_t counter=CX10_GREEN_BIND_COUNT;
-    bool bound=false;
+void protCX10_GREENBLUE::bind() {
+    uint16_t counter = CX10_GREEN_BIND_COUNT;
+    bool bound = false;
     uint32_t timeout;
     while(!bound) {
         NRF24L01_SetTxRxMode(TX_EN);
@@ -96,11 +85,11 @@ void CX10_bind()
         NRF24L01_WriteReg(NRF24L01_05_RF_CH, CX10_RF_BIND_CHANNEL);
         NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);
         NRF24L01_FlushTx();
-        CX10_Write_Packet(0xAA); // send bind packet
-        switch(current_protocol) {
+        CX10_Write_Packet(0xAA); // send bind Ppacket
+        switch(version) {
             case PROTO_CX10_GREEN:
                 delayMicroseconds(CX10_packet_period);
-                if(counter==0)
+                if(counter == 0)
                     bound = true;
                 break;
             case PROTO_CX10_BLUE:
@@ -109,63 +98,69 @@ void CX10_bind()
                 NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);
                 NRF24L01_FlushRx();
                 XN297_Configure(_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP) | _BV(NRF24L01_00_PRIM_RX));
-                timeout = millis()+5;
-                while(millis()<timeout) {
+                timeout = millis() + 5;
+                while(millis() < timeout) {
                     if(NRF24L01_ReadReg(NRF24L01_07_STATUS) & _BV(NRF24L01_07_RX_DR)) { // data received from aircraft
-                        XN297_ReadPayload(packet, CX10_packet_length);
-                        if( packet[9] == 0x01)
-                        bound = true;
+                        XN297_ReadPayload(Ppacket, CX10_packet_length);
+                        if(Ppacket[9] == 0x01)
+                            bound = true;
                         break;
                     }
                 }
                 break;
         }
-        digitalWrite(ledPin, counter-- & 0x10);
-        if(ppm[AUX8] > PPM_MAX_COMMAND) {
-            reset = true;
-            return;
-        }
+        digitalWrite(pinLED, counter-- & 0x10);
     }
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(pinLED, HIGH);
 }
 
-void CX10_Write_Packet(uint8_t init)
-{
+void protCX10_GREENBLUE::CX10_Write_Packet(uint8_t init) {
     uint8_t offset = 0;
-    if(current_protocol == PROTO_CX10_BLUE)
+    if(version == PROTO_CX10_BLUE)
         offset = 4;
-    packet[0] = init;
-    packet[1] = CX10_txid[0];
-    packet[2] = CX10_txid[1];
-    packet[3] = CX10_txid[2];
-    packet[4] = CX10_txid[3];
-    // packet[5] to [8] (aircraft id) is filled during bind for blue board CX10
-    packet[5+offset] = lowByte(3000-ppm[AILERON]);
-    packet[6+offset]= highByte(3000-ppm[AILERON]);
-    packet[7+offset]= lowByte(3000-ppm[ELEVATOR]);
-    packet[8+offset]= highByte(3000-ppm[ELEVATOR]);
-    packet[9+offset]= lowByte(ppm[THROTTLE]);
-    packet[10+offset]= highByte(ppm[THROTTLE]);
-    packet[11+offset]= lowByte(ppm[RUDDER]);
-    packet[12+offset]= highByte(ppm[RUDDER]);
-    if(ppm[AUX2] > PPM_MAX_COMMAND)
-        packet[12+offset] |= 0x10; // flip flag
-    // rate / mode
-    if(ppm[AUX1] > PPM_MAX_COMMAND) // mode 3 / headless on CX-10A
-        packet[13+offset] = 0x02;
-    else if(ppm[AUX1] < PPM_MIN_COMMAND) // mode 1
-        packet[13+offset] = 0x00;
-    else // mode 2
-        packet[13+offset] = 0x01;
-    packet[14+offset] = 0x00;
-    if(current_protocol == PROTO_CX10_BLUE) {
-        // snapshot (CX10-C)
-        if(ppm[AUX3] < PPM_MAX_COMMAND)
-            packet[13+offset] |= 0x10;
-        // video recording (CX10-C)
-        if(ppm[AUX4] > PPM_MAX_COMMAND)
-            packet[13+offset] |= 0x08;
-    }    
+    Ppacket[0] = init;
+    Ppacket[1] = CX10_txid[0];
+    Ppacket[2] = CX10_txid[1];
+    Ppacket[3] = CX10_txid[2];
+    Ppacket[4] = CX10_txid[3];
+    // Ppacket[5] to [8] (aircraft id) is filled during bind for blue board CX10
+    Ppacket[5 + offset] = lowByte(3000 - multipro.getChannel(CH_AILERON));
+    Ppacket[6 + offset] = highByte(3000 - multipro.getChannel(CH_AILERON));
+    Ppacket[7 + offset] = lowByte(3000 - multipro.getChannel(CH_ELEVATOR));
+    Ppacket[8 + offset] = highByte(3000 - multipro.getChannel(CH_ELEVATOR));
+    Ppacket[9 + offset] = lowByte(multipro.getChannel(CH_THROTTLE));
+    Ppacket[10 + offset] = highByte(multipro.getChannel(CH_THROTTLE));
+    Ppacket[11 + offset] = lowByte(multipro.getChannel(CH_RUDDER));
+    Ppacket[12 + offset] = highByte(multipro.getChannel(CH_RUDDER));
 
-    XN297_WritePayload(packet, CX10_packet_length);
+    if(multipro.getChannelIsCMD(CH_FLIP)) {
+        Ppacket[12 + offset] |= 0x10; // flip flag
+    }
+
+    // rate / mode (use headless channel)
+    switch(multipro.getChannel3way(CH_3WAY)) {
+        case -1:
+            Ppacket[13 + offset] = 0x00; // mode 1
+            break;
+        case 0:
+            Ppacket[13 + offset] = 0x01; // mode 2
+            break;
+        case 1:
+            Ppacket[13 + offset] = 0x02; // mode 3 / headless
+            break;
+    }
+
+    if(version == PROTO_CX10_BLUE) {
+        // snapshot (CX10-C)
+        if(multipro.getChannelIsCMD(CH_PIC)) {
+            Ppacket[13 + offset] |= 0x10;
+        }
+        // video recording (CX10-C)
+        if(multipro.getChannelIsCMD(CH_CAM)) {
+            Ppacket[13 + offset] |= 0x08;
+        }
+    }
+
+    Ppacket[14 + offset] = 0x00;
+    XN297_WritePayload(Ppacket, CX10_packet_length);
 }
