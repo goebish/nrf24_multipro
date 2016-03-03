@@ -82,6 +82,7 @@ enum chan_order{
 #define PPM_MIN_COMMAND 1300
 #define PPM_MAX_COMMAND 1700
 #define GET_FLAG(ch, mask) (ppm[ch] > PPM_MAX_COMMAND ? mask : 0)
+#define GET_FLAG_INV(ch, mask) (ppm[ch] < PPM_MIN_COMMAND ? mask : 0)
 
 // supported protocols
 enum {
@@ -94,6 +95,7 @@ enum {
     PROTO_SYMAX5C1,     // Syma X5C-1 (not older X5C), X11, X11C, X12
     PROTO_YD829,        // YD-829, YD-829C, YD-822 ...
     PROTO_H8_3D,        // EAchine H8 mini 3D, JJRC H20, H22
+    PROTO_MJX,          // MJX X600 (can be changed to Weilihua WLH08, X800 or H26D)
     PROTO_END
 };
 
@@ -172,6 +174,9 @@ void loop()
         case PROTO_H8_3D:
             timeout = process_H8_3D();
             break;
+        case PROTO_MJX:
+            timeout = process_MJX();
+            break;
     }
     // updates ppm values out of ISR
     update_ppm();
@@ -213,8 +218,12 @@ void selectProtocol()
     
     // protocol selection
     
+    // Rudder right + Aileron right
+    if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
+        current_protocol = PROTO_MJX; // MJX X600, other sub protocols can be set in code
+    
     // Rudder right + Aileron left
-    if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND)
+    else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND)
         current_protocol = PROTO_H8_3D; // H8 mini 3D, H20 ...
     
     // Elevator down + Aileron right
@@ -293,6 +302,10 @@ void init_protocol()
         case PROTO_H8_3D:
             H8_3D_init();
             H8_3D_bind();
+            break;
+        case PROTO_MJX:
+            MJX_init();
+            MJX_bind();
             break;
     }
 }
