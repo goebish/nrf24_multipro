@@ -59,13 +59,11 @@ u8 mjx_checksum()
     return sum;
 }
 
-#define BABS(X) (((X) < 0) ? -(u8)(X) : (X))
-#define LIMIT_CHAN(X) (X < PPM_MIN ? PPM_MIN : (X > PPM_MAX ? PPM_MAX : X))
 // Channel values are sign + magnitude 8bit values
 u8 mjx_convert_channel(u8 num)
 {
-    int32_t ch = LIMIT_CHAN(ppm[num]);
-    return (u8) ((ch < PPM_MID ? 0x80 : 0) | BABS(ch * 127 / PPM_MAX));
+    u8 val = map(ppm[num], PPM_MIN, PPM_MAX, 0, 255);
+    return (val < 128 ? 127-val : val);	
 }
 
 #define PAN_TILT_COUNT     16   // for H26D - match stock tx timing
@@ -81,11 +79,11 @@ u8 mjx_pan_tilt_value()
     
     count++;
 
-    int32_t ch = LIMIT_CHAN(ppm[MJX_CHANNEL_PAN]);
+    int32_t ch = ppm[MJX_CHANNEL_PAN];
     if ((ch < PPM_MIN_COMMAND || ch > PPM_MAX_COMMAND) && (count & PAN_TILT_COUNT))
     pan = ch < PPM_MID ? PAN_DOWN : PAN_UP;
 
-    ch = LIMIT_CHAN(ppm[MJX_CHANNEL_TILT]);
+    ch = ppm[MJX_CHANNEL_TILT];
     if ((ch < PPM_MIN_COMMAND || ch > PPM_MAX_COMMAND) && (count & PAN_TILT_COUNT))
     return pan + (ch < PPM_MID ? TILT_DOWN : TILT_UP);
     
@@ -95,11 +93,10 @@ u8 mjx_pan_tilt_value()
 #define CHAN2TRIM(X) (((X) & 0x80 ? (X) : 0x7f - (X)) >> 1)
 void mjx_send_packet(u8 bind)
 {
-    packet[0] = mjx_convert_channel(THROTTLE);          // throttle
-    packet[0] = packet[0] & 0x80 ? 0xff - packet[0] : 0x80 + packet[0];
+    packet[0] = map(ppm[THROTTLE], PPM_MIN, PPM_MAX, 0, 255);
     packet[1] = mjx_convert_channel(RUDDER);          // rudder
     packet[4] = 0x40;         // rudder does not work well with dyntrim
-    packet[2] = 0x80 ^ mjx_convert_channel(ELEVATOR);   // elevator
+    packet[2] = mjx_convert_channel(ELEVATOR);   // elevator
     packet[5] = CHAN2TRIM(packet[2]); // 0x40;      // trim elevator
     packet[3] = mjx_convert_channel(AILERON);          // aileron
     packet[6] = CHAN2TRIM(packet[3]); // 0x40;      // trim aileron
