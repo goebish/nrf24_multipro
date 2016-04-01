@@ -96,6 +96,7 @@ enum {
     PROTO_YD829,        // YD-829, YD-829C, YD-822 ...
     PROTO_H8_3D,        // EAchine H8 mini 3D, JJRC H20, H22
     PROTO_MJX,          // MJX X600 (can be changed to Weilihua WLH08, X800 or H26D)
+    PROTO_SYMAXOLD,     // Syma X5C, X2
     PROTO_END
 };
 
@@ -169,6 +170,7 @@ void loop()
             timeout = process_Bayang();
             break;
         case PROTO_SYMAX5C1:
+        case PROTO_SYMAXOLD:
             timeout = process_SymaX();
             break;
         case PROTO_H8_3D:
@@ -218,8 +220,12 @@ void selectProtocol()
     
     // protocol selection
     
+    // Rudder right + Elevator up
+    if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[ELEVATOR] > PPM_MAX_COMMAND)
+        current_protocol = PROTO_SYMAXOLD; // Syma X5C, X2 ...
+    
     // Rudder right + Aileron right
-    if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
+    else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND)
         current_protocol = PROTO_MJX; // MJX X600, other sub protocols can be set in code
     
     // Rudder right + Aileron left
@@ -296,6 +302,7 @@ void init_protocol()
             Bayang_bind();
             break;
         case PROTO_SYMAX5C1:
+        case PROTO_SYMAXOLD:
             Symax_init();
             SymaX_bind();
             break;
