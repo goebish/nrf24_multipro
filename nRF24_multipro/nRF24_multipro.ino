@@ -97,10 +97,11 @@ enum {
     PROTO_H8_3D,        // EAchine H8 mini 3D, JJRC H20, H22
     PROTO_MJX,          // MJX X600 (can be changed to Weilihua WLH08, X800 or H26D)
     PROTO_SYMAXOLD,     // Syma X5C, X2
+    PROTO_HISKY,        // HiSky RXs, HFP80, HCP80/100, FBL70/80/90/100, FF120, HMX120, WLToys v933/944/955 ...
     PROTO_END
 };
 
-// EEPROM locations
+// EEPROM locationss
 enum{
     ee_PROTOCOL_ID = 0,
     ee_TXID0,
@@ -179,6 +180,9 @@ void loop()
         case PROTO_MJX:
             timeout = process_MJX();
             break;
+        case PROTO_HISKY:
+            timeout = process_HiSky();
+            break;
     }
     // updates ppm values out of ISR
     update_ppm();
@@ -220,8 +224,12 @@ void selectProtocol()
     
     // protocol selection
     
+    // Rudder right + Elevator down
+    else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[ELEVATOR] < PPM_MIN_COMMAND)
+    current_protocol = PROTO_HISKY; // HiSky RXs, HFP80, HCP80/100, FBL70/80/90/100, FF120, HMX120, WLToys v933/944/955 ...
+    
     // Rudder right + Elevator up
-    if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[ELEVATOR] > PPM_MAX_COMMAND)
+    else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[ELEVATOR] > PPM_MAX_COMMAND)
         current_protocol = PROTO_SYMAXOLD; // Syma X5C, X2 ...
     
     // Rudder right + Aileron right
@@ -313,6 +321,9 @@ void init_protocol()
         case PROTO_MJX:
             MJX_init();
             MJX_bind();
+            break;
+        case PROTO_HISKY:
+            HiSky_init();
             break;
     }
 }
