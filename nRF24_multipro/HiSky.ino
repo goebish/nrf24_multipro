@@ -24,22 +24,22 @@ const uint8_t  hisky_binding_adr_rf[5]={0x12,0x23,0x23,0x45,0x78}; // fixed bind
 uint8_t hisky_rf_adr_buf[5]; 
 uint8_t hisky_binding_idx;
 uint8_t hisky_bind_buf_array[4][10];
-uint8_t hisky_hisky_bind_counter1ms;
+uint8_t hisky_counter1ms;
 uint16_t hisky_bind_counter;
 
 uint32_t process_HiSky()
 {
     uint32_t nextPacket = micros() + HISKY_PACKET_PERIOD;
     
-    hisky_hisky_bind_counter1ms++;
-    if(hisky_hisky_bind_counter1ms==1)
+    hisky_counter1ms++;
+    if(hisky_counter1ms==1)
         NRF24L01_FlushTx();
-    else if(hisky_hisky_bind_counter1ms==2) {
+    else if(hisky_counter1ms==2) {
         if (hisky_bind_counter>0) {
             NRF24L01_WriteRegisterMulti(NRF24L01_10_TX_ADDR, (uint8_t *)hisky_binding_adr_rf, 5);
             NRF24L01_WriteReg(NRF24L01_05_RF_CH, 81);
         }
-    }else if(hisky_hisky_bind_counter1ms==3) {
+    }else if(hisky_counter1ms==3) {
         if (hisky_bind_counter >0)
         {
             hisky_bind_counter--;
@@ -53,23 +53,23 @@ uint32_t process_HiSky()
                 hisky_binding_idx = 0;
         }
 
-    } else if (hisky_hisky_bind_counter1ms==4) {
+    } else if (hisky_counter1ms==4) {
         if (hisky_bind_counter > 0)
             NRF24L01_FlushTx();
-    }else if(hisky_hisky_bind_counter1ms==5)
+    }else if(hisky_counter1ms==5)
         NRF24L01_SetPower(RF_POWER);
-    else if (hisky_hisky_bind_counter1ms == 6) {
+    else if (hisky_counter1ms == 6) {
         NRF24L01_WriteRegisterMulti(NRF24L01_10_TX_ADDR, hisky_rf_adr_buf, 5);
         NRF24L01_WriteReg(NRF24L01_05_RF_CH, hisky_hopping_frequency[hisky_hopping_frequency_no]);
         hisky_hopping_frequency_no++;
         if (hisky_hopping_frequency_no >= HISKY_FREQUENCE_NUM)
             hisky_hopping_frequency_no = 0;
     }
-    else if (hisky_hisky_bind_counter1ms == 7) {
+    else if (hisky_counter1ms == 7) {
         HiSky_build_ch_data();
     }
-    else if(hisky_hisky_bind_counter1ms>8){
-        hisky_hisky_bind_counter1ms = 0;
+    else if(hisky_counter1ms>8){
+        hisky_counter1ms = 0;
         NRF24L01_WritePayload(packet,10);
     }    
         
@@ -156,7 +156,7 @@ void HiSky_build_binding_packet(void)
     unsigned int  sum;
     uint8_t sum_l,sum_h;
 
-    hisky_hisky_bind_counter1ms = 0;
+    hisky_counter1ms = 0;
     hisky_hopping_frequency_no = 0;
 
     sum = 0;
