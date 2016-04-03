@@ -112,9 +112,9 @@ void CG023_WritePacket(uint8_t init)
     packet[3] = 0;
     packet[4] = 0;
     packet[5] = map(ppm[THROTTLE], PPM_MIN, PPM_MAX, 0, 255) ; // throttle stick
-    if(Servo_data[RUDDER] < PPM_MID )
+    if(ppm[RUDDER] < PPM_MID - 9 )
         packet[6] = map(ppm[RUDDER], PPM_MID , PPM_MIN, 0x80 , 0xBC);
-    else if(Servo_data[RUDDER] > PPM_MID )
+    else if(ppm[RUDDER] > PPM_MID + 9)
         packet[6] = map(ppm[RUDDER], PPM_MID , PPM_MAX, 0x00 , 0x3C);
     else
     packet[6] = 0x00;
