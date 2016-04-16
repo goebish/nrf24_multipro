@@ -312,7 +312,6 @@ void init_protocol()
         case PROTO_SYMAX5C1:
         case PROTO_SYMAXOLD:
             Symax_init();
-            SymaX_bind();
             break;
         case PROTO_H8_3D:
             H8_3D_init();

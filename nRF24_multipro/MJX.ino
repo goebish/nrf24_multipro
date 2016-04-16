@@ -251,6 +251,6 @@ void MJX_bind()
         delayMicroseconds(MJX_PACKET_PERIOD);
         digitalWrite(ledPin, mjx_counter & 0x10);
     }
-    mjx_init2;
+    mjx_init2();
     digitalWrite(ledPin, HIGH);
 }
