@@ -20,10 +20,13 @@
 
 #define SYMAX_MAX_RF_CHANNELS    	17
 
-#define SYMAX_FLAG_FLIP				0x01
-#define SYMAX_FLAG_VIDEO			0x02
-#define SYMAX_FLAG_PICTURE			0x04
-#define SYMAX_FLAG_HEADLESS			0x08
+// flags going to packet[4]
+#define SYMAX_FLAG_PICTURE  0x40
+#define SYMAX_FLAG_VIDEO    0x80
+// flags going to packet[6]
+#define SYMAX_FLAG_FLIP     0x40
+// flags going to packet[7]
+#define SYMAX_FLAG_HEADLESS 0x80
 
 #define SYMAX_PAYLOADSIZE			10		// receive data pipes set to this size, but unused
 #define SYMAX_MAX_PACKET_LENGTH		16		// X11,X12,X5C-1 10-byte, X5C 16-byte
