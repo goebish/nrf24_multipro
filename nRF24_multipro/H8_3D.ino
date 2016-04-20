@@ -100,7 +100,6 @@ void H8_3D_send_packet(uint8_t  bind)
         if(packet[9] == 0x00 && packet[10] >= 0xb6 && packet[11] <= 0x49 && packet[12] >= 0xb5)
             packet[18] |= H8_3D_FLAG_CALIBRATE;
     }
-    packet[18] = 0x00;
     packet[19] = H8_3D_checksum(); // data checksum
     
     // Power on, TX mode, 2byte CRC
