@@ -38,12 +38,13 @@ uint8_t spi_write(uint8_t command)
         else
             MOSI_off;
         if(MISO_on)
-            result |= 0x01;
+            result = (result<<1)|0x01;
+        else
+            result = result<<1;
         SCK_on;
         NOP();
         SCK_off;
         command = command << 1;
-        result = result << 1;
     }
     MOSI_on;
     return result;
