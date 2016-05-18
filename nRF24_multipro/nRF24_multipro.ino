@@ -142,7 +142,7 @@ void setup()
 
 void loop()
 {
-    uint32_t timeout;
+    uint32_t timeout=0;
     // reset / rebind
     if(reset || ppm[AUX8] > PPM_MAX_COMMAND) {
         reset = false;

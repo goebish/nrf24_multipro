@@ -113,8 +113,8 @@ void HiSky_init()
 void HiSky_calc_fh_channels()
 {
     int idx = 0;
-    uint32_t seed = transmitterID[3] << 24
-             | transmitterID[2] << 16
+    uint32_t seed = (uint32_t)transmitterID[3] << 24
+             | (uint32_t)transmitterID[2] << 16
              | transmitterID[1] << 8
              | transmitterID[0];
     uint32_t rnd = seed;
