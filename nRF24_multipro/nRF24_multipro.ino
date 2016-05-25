@@ -98,6 +98,7 @@ enum {
     PROTO_MJX,          // MJX X600 (can be changed to Weilihua WLH08, X800 or H26D)
     PROTO_SYMAXOLD,     // Syma X5C, X2
     PROTO_HISKY,        // HiSky RXs, HFP80, HCP80/100, FBL70/80/90/100, FF120, HMX120, WLToys v933/944/955 ...
+    PROTO_KN,           // KN (WLToys variant) V930/931/939/966/977/988
     PROTO_END
 };
 
@@ -183,6 +184,9 @@ void loop()
         case PROTO_HISKY:
             timeout = process_HiSky();
             break;
+        case PROTO_KN:
+            timeout = process_KN();
+            break;
     }
     // updates ppm values out of ISR
     update_ppm();
@@ -224,9 +228,13 @@ void selectProtocol()
     
     // protocol selection
     
+    // Rudder right + Aileron left + Elevator down
+    else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND && ppm[ELEVATOR] < PPM_MIN_COMMAND)
+        current_protocol = PROTO_KN; // KN (WLToys variant) V930/931/939/966/977/988
+    
     // Rudder right + Elevator down
     else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[ELEVATOR] < PPM_MIN_COMMAND)
-    current_protocol = PROTO_HISKY; // HiSky RXs, HFP80, HCP80/100, FBL70/80/90/100, FF120, HMX120, WLToys v933/944/955 ...
+        current_protocol = PROTO_HISKY; // HiSky RXs, HFP80, HCP80/100, FBL70/80/90/100, FF120, HMX120, WLToys v933/944/955 ...
     
     // Rudder right + Elevator up
     else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[ELEVATOR] > PPM_MAX_COMMAND)
@@ -323,6 +331,9 @@ void init_protocol()
             break;
         case PROTO_HISKY:
             HiSky_init();
+            break;
+        case PROTO_KN:
+            kn_start_tx(true); // autobind
             break;
     }
 }

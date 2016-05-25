@@ -1,12 +1,14 @@
 # nrf24-multipro
 nRF24L01 multi-protocol RC transmitter
 
-![Screenshot](http://i.imgur.com/AeMJKzT.jpg)
+![Screenshot](http://i.imgur.com/AeMJKzT.jpg)  
+[Need a module ?](mailto://goebish@gmail.com)
 
 Create a model in OpenTX using external module in PPM mode, 12 channels and TAER sequence order.
 
 #####Protocol is selected with stick position at startup:
 
+Rudder right + Aileron left + Elevator down = WLToys V930/931/939/966/977/988  
 Rudder right + Elevator down = HiSky RXs, HFP80, HCP80/100, FBL70/80/90/100, FF120, HMX120, WLToys v933/944/955  
 Rudder right + Elevator up = Syma X5C (older model), X2 ...  
 Rudder right + Aileron right = MJX X600  

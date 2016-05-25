@@ -197,7 +197,7 @@ void HiSky_build_ch_data()
     for (i = 0; i< 8; i++) {
         j=ch[i];
         temp=map(ppm[j], PPM_MIN, PPM_MAX, 0, 1000);
-        if (j == THROTTLE) // It is clear that hisky's throttle stick is made reversely, so I adjust it here on purpose
+        if (j == THROTTLE || j == AILERON || j == RUDDER || j == AUX2)
             temp = 1000 -temp;
         if (j == AUX3)
             temp = temp < 400 ? 0 : 3; // Gyro mode, 0 - 6 axis, 3 - 3 axis
