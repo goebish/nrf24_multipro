@@ -117,17 +117,12 @@ void H8_3D_send_packet(uint8_t  bind)
 
 void H8_3D_init()
 {
-    // tx id
-    H8_3D_txid[0] = 0xa0 + (transmitterID[0] % 0x10);
-    H8_3D_txid[1] = 0xb0 + (transmitterID[1] % 0x20);
-    H8_3D_txid[2] = (transmitterID[2] % 0x20);
-    H8_3D_txid[3] = (transmitterID[3] % 0x11);
-    
-    // rf channels
-    H8_3D_rf_channels[0] = 0x06 + (((H8_3D_txid[0]>>8) + (H8_3D_txid[0]&0x0f)) % 0x0f);
-    H8_3D_rf_channels[1] = 0x15 + (((H8_3D_txid[1]>>8) + (H8_3D_txid[1]&0x0f)) % 0x0f);
-    H8_3D_rf_channels[2] = 0x24 + (((H8_3D_txid[2]>>8) + (H8_3D_txid[2]&0x0f)) % 0x0f);
-    H8_3D_rf_channels[3] = 0x33 + (((H8_3D_txid[3]>>8) + (H8_3D_txid[3]&0x0f)) % 0x0f);
+    u8 i;
+    // tx id & rf channels
+    for(i=0; i<3; i++) {
+        H8_3D_txid[i] = transmitterID[i];
+        H8_3D_rf_channels[i] = 0x06 + (i*0x0f) + (((H8_3D_txid[i]>>4) + (H8_3D_txid[i]&0x0f)) % 0x0f);
+    }
     
     NRF24L01_Initialize();
     NRF24L01_SetTxRxMode(TX_EN);
