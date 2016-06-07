@@ -8,6 +8,7 @@ Create a model in OpenTX using external module in PPM mode, 12 channels and TAER
 
 #####Protocol is selected with stick position at startup:
 
+Rudder right + Aileron left + Elevator up = CX-10 older red PCB/CX11/CX205/CX30, JXD389/391/393, SH6057/6043/6044/6046/6047, FY326Q7, WLToys v252 Pro/v343, XinXun X28/X30/X33/X39/X40   
 Rudder right + Aileron left + Elevator down = WLToys V930/931/939/966/977/988  
 Rudder right + Elevator down = HiSky RXs, HFP80, HCP80/100, FBL70/80/90/100, FF120, HMX120, WLToys v933/944/955  
 Rudder right + Elevator up = Syma X5C (older model), X2 ...  

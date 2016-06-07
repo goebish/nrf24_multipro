@@ -99,6 +99,7 @@ enum {
     PROTO_SYMAXOLD,     // Syma X5C, X2
     PROTO_HISKY,        // HiSky RXs, HFP80, HCP80/100, FBL70/80/90/100, FF120, HMX120, WLToys v933/944/955 ...
     PROTO_KN,           // KN (WLToys variant) V930/931/939/966/977/988
+    PROTO_YD717,        // Cheerson CX-10 red (older version)/CX11/CX205/CX30, JXD389/390/391/393, SH6057/6043/6044/6046/6047, FY326Q7, WLToys v252 Pro/v343, XinXun X28/X30/X33/X39/X40
     PROTO_END
 };
 
@@ -147,7 +148,7 @@ void loop()
     // reset / rebind
     if(reset || ppm[AUX8] > PPM_MAX_COMMAND) {
         reset = false;
-        selectProtocol();        
+        selectProtocol();
         NRF24L01_Reset();
         NRF24L01_Initialize();
         init_protocol();
@@ -186,6 +187,9 @@ void loop()
             break;
         case PROTO_KN:
             timeout = process_KN();
+            break;
+        case PROTO_YD717:
+            timeout = process_YD717();
             break;
     }
     // updates ppm values out of ISR
@@ -227,6 +231,10 @@ void selectProtocol()
         set_txid(true);                      // Renew Transmitter ID
     
     // protocol selection
+    
+    // Rudder right + Aileron left + Elevator up
+    else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND && ppm[ELEVATOR] > PPM_MAX_COMMAND)
+        current_protocol = PROTO_YD717; // Cheerson CX-10 red (older version)/CX11/CX205/CX30, JXD389/390/391/393, SH6057/6043/6044/6046/6047, FY326Q7, WLToys v252 Pro/v343, XinXun X28/X30/X33/X39/X40
     
     // Rudder right + Aileron left + Elevator down
     else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND && ppm[ELEVATOR] < PPM_MIN_COMMAND)
@@ -334,6 +342,9 @@ void init_protocol()
             break;
         case PROTO_KN:
             kn_start_tx(true); // autobind
+            break;
+        case PROTO_YD717:
+            YD717_init();
             break;
     }
 }
