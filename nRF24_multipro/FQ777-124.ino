@@ -24,7 +24,12 @@
 #define FQ777124_RF_NUM_CHANNELS  4
 #define FQ777124_ADDRESS_LENGTH   5
 
-uint8_t FQ777124_dpl_packet[32] = {0};
+
+#define FQ777124_TRIM_CHAN_ROLL   AUX7
+#define FQ777124_TRIM_CHAN_PITCH  AUX4
+
+static uint8_t FQ777124_dpl_packet[32] = {0};
+static uint8_t FQ777124_packet_count   = 0;
 
 static uint8_t FQ777124_rf_chan;
 static uint8_t FQ777124_rf_channels[FQ777124_RF_NUM_CHANNELS] = {0x4D, 0x43, 0x27, 0x07};
@@ -33,6 +38,15 @@ static uint8_t FQ777124_rx_tx_addr[FQ777124_ADDRESS_LENGTH]   = {0xd3,0x45,0x00,
 
 uint8_t ssv_xor[] = {0x80,0x44,0x64,0x75,0x6C,0x71,0x2A,0x36,0x7C,0xF1,0x6E,0x52,0x9,0x9D,0x1F,0x78,0x3F,0xE1,0xEE,0x16,0x6D,0xE8,0x73,0x9,0x15,0xD7,0x92,0xE7,0x3,0xBA};
 
+
+enum {
+    // flags going to packet[6]
+    // H7_FLAG_RATE0, // default rate, no flag
+    FQ777124_FLAG_RETURN     = 0x40,  // 0x40 when not off, !0x40 when one key return
+    FQ777124_FLAG_HEADLESS   = 0x04,
+    FQ777124_FLAG_EXPERT     = 0x01,
+    FQ777124_FLAG_FLIP       = 0x80,
+};
 
 uint32_t process_FQ777124()
 {
@@ -174,6 +188,20 @@ void FQ777124_send_packet(u8 bind)
         packet[6] = FQ777124_rx_tx_addr[2];
         packet[7] = packet[4] + packet[5] + packet[6];
     } else {
+        uint8_t trim_mod  = FQ777124_packet_count % 144;
+        uint8_t trim_val  = 0;
+        if (36 <= trim_mod && trim_mod < 72) // yaw
+        {
+          trim_val  = 0x20; // don't modify yaw trim
+        }
+        else if (108 < trim_mod && trim_mod) // pitch
+        {
+          trim_val = map(ppm[FQ777124_TRIM_CHAN_PITCH], PPM_MIN, PPM_MAX, 0x01, 0x3E) + 0xA0 - 0x1F;
+        }
+        else // roll
+        {
+          trim_val = map(ppm[FQ777124_TRIM_CHAN_ROLL], PPM_MIN, PPM_MAX, 0x01, 0x3E) + 0x60 - 0x1F;
+        }
         // throt, yaw, pitch, roll, trims, flags/left button,00,right button
         //0-3 0x00-0x64
         //4 roll/pitch/yaw trims. cycles through one trim at a time - 0-40 trim1, 40-80 trim2, 80-C0 trim3 (center:  A0 20 60)
@@ -185,14 +213,20 @@ void FQ777124_send_packet(u8 bind)
         packet[1] = map(ppm[RUDDER],PPM_MIN, PPM_MAX,0,0x64);
         packet[2] = map(ppm[ELEVATOR],PPM_MIN, PPM_MAX,0,0x64);
         packet[3] = map(ppm[AILERON],PPM_MIN, PPM_MAX,0,0x64);
-        packet[4] = 0x20;
-        packet[5] = 0x40;
+        packet[4] = trim_val; // calculated above
+        packet[5] = GET_FLAG(AUX2, FQ777124_FLAG_FLIP)
+                  | GET_FLAG(AUX5, FQ777124_FLAG_HEADLESS)
+                  | GET_FLAG_INV(AUX6, FQ777124_FLAG_RETURN)
+                  | GET_FLAG(AUX1, FQ777124_FLAG_EXPERT);                          
+                          
         packet[6] = 0x00;
         // calculate checksum
         uint8_t checksum = 0;
         for (int i = 0; i < 7; ++i)
             checksum += packet[i];
         packet[7] = checksum;
+
+        FQ777124_packet_count++;
     }
 
     ssv_pack_dpl( (0 == bind) ? FQ777124_rx_tx_addr : FQ777124_bind_addr, FQ777124_rf_chan, &packet_len, packet, FQ777124_dpl_packet);
@@ -202,6 +236,8 @@ void FQ777124_send_packet(u8 bind)
     FQ777124_rf_chan %= sizeof(FQ777124_rf_channels);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);
     NRF24L01_FlushTx();
+    NRF24L01_WritePayload(FQ777124_dpl_packet, packet_len);
+    NRF24L01_WritePayload(FQ777124_dpl_packet, packet_len);
     NRF24L01_WritePayload(FQ777124_dpl_packet, packet_len);
 }
 

@@ -28,11 +28,11 @@ Last used protocol is automatically selected if stick is in neutral position.
 
 #####Extra features (if available on aircraft):
 
-- Channel 5: led light, 3 pos. rate on CX-10, H7, inverted flight on H101  
+- Channel 5: led light, 3 pos. rate on CX-10 and FQ777-124, H7, inverted flight on H101  
 - Channel 6: flip control  
 - Channel 7: still camera  
-- Channel 8: video camera  
+- Channel 8: video camera, pitch trim (FQ777-124)  
 - Channel 9: headless  
-- Channel 10: calibrate Y (V2x2), pitch trim (H7), RTH (H8 mini/H20), 360deg flip mode (H8 mini 3D/H22)  
-- Channel 11: calibrate X (V2x2), roll trim (H7)  
+- Channel 10: calibrate Y (V2x2), pitch trim (H7), RTH (H8 mini/H20, FQ777-124), 360deg flip mode (H8 mini 3D/H22)  
+- Channel 11: calibrate X (V2x2), roll trim (H7,FQ777-124)  
 - Channel 12: Reset / Rebind  
