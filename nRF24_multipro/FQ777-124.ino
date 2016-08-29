@@ -58,8 +58,6 @@ uint32_t process_FQ777124()
 
 void FQ777124_init()
 {
-    uint8_t i;
-
     NRF24L01_Initialize();
     NRF24L01_SetTxRxMode(TX_EN);
     NRF24L01_WriteRegisterMulti(NRF24L01_10_TX_ADDR, FQ777124_bind_addr, FQ777124_ADDRESS_LENGTH);

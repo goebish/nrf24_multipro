@@ -25,8 +25,9 @@ enum {
     FORMAT_X600,
     FORMAT_X800,
     FORMAT_H26D,
+    FORMAT_E010,
 };
-const u8 mjx_format = FORMAT_X600; // change this to desired sub format
+u8 mjx_format;
 
 #define MJX_CHANNEL_LED         AUX1
 #define MJX_CHANNEL_FLIP        AUX2
@@ -81,11 +82,11 @@ u8 mjx_pan_tilt_value()
 
     int32_t ch = ppm[MJX_CHANNEL_PAN];
     if ((ch < PPM_MIN_COMMAND || ch > PPM_MAX_COMMAND) && (count & PAN_TILT_COUNT))
-    pan = ch < PPM_MID ? PAN_DOWN : PAN_UP;
+        pan = ch < PPM_MID ? PAN_DOWN : PAN_UP;
 
     ch = ppm[MJX_CHANNEL_TILT];
     if ((ch < PPM_MIN_COMMAND || ch > PPM_MAX_COMMAND) && (count & PAN_TILT_COUNT))
-    return pan + (ch < PPM_MID ? TILT_DOWN : TILT_UP);
+        return pan + (ch < PPM_MID ? TILT_DOWN : TILT_UP);
     
     return pan;
 }
@@ -112,46 +113,47 @@ void mjx_send_packet(u8 bind)
     packet[14] = 0xc0;  // bind value
     switch (mjx_format) {
         case FORMAT_H26D:
-        packet[10] = mjx_pan_tilt_value();
-        // fall through on purpose - no break
+            packet[10] = mjx_pan_tilt_value();
+            // fall through on purpose - no break
         case FORMAT_WLH08:
-        packet[10] += GET_FLAG(MJX_CHANNEL_RTH, 0x02)
-        | GET_FLAG(MJX_CHANNEL_HEADLESS, 0x01);
-        if (!bind) {
-            packet[14] = 0x04
-            | GET_FLAG(MJX_CHANNEL_FLIP, 0x01)
-            | GET_FLAG(MJX_CHANNEL_PICTURE, 0x08)
-            | GET_FLAG(MJX_CHANNEL_VIDEO, 0x10)
-            | GET_FLAG_INV(MJX_CHANNEL_LED, 0x20); // air/ground mode
-        }
+        case FORMAT_E010:
+            packet[10] += GET_FLAG(MJX_CHANNEL_RTH, 0x02)
+                        | GET_FLAG(MJX_CHANNEL_HEADLESS, 0x01);
+            if (!bind) {
+                packet[14] = 0x04
+                | GET_FLAG(MJX_CHANNEL_FLIP, 0x01)
+                | GET_FLAG(MJX_CHANNEL_PICTURE, 0x08)
+                | GET_FLAG(MJX_CHANNEL_VIDEO, 0x10)
+                | GET_FLAG_INV(MJX_CHANNEL_LED, 0x20); // air/ground mode
+            }
         break;
 
         case FORMAT_X600:
-        if (GET_FLAG(MJX_CHANNEL_HEADLESS, 1)) { // driven trims cause issues when headless is enabled
-            packet[5] = 0x40;
-            packet[6] = 0x40;
-        }
-        packet[10] = GET_FLAG_INV(MJX_CHANNEL_LED, 0x02);
-        packet[11] = GET_FLAG(MJX_CHANNEL_RTH, 0x01);
-        if (!bind) {
-            packet[14] = 0x02      // always high rates by bit2 = 1
-            | GET_FLAG(MJX_CHANNEL_FLIP, 0x04)
-            | GET_FLAG(MJX_CHANNEL_AUTOFLIP, 0x10)
-            | GET_FLAG(MJX_CHANNEL_HEADLESS, 0x20);
-        }
+            if (GET_FLAG(MJX_CHANNEL_HEADLESS, 1)) { // driven trims cause issues when headless is enabled
+                packet[5] = 0x40;
+                packet[6] = 0x40;
+            }
+            packet[10] = GET_FLAG_INV(MJX_CHANNEL_LED, 0x02);
+            packet[11] = GET_FLAG(MJX_CHANNEL_RTH, 0x01);
+            if (!bind) {
+                packet[14] = 0x02      // always high rates by bit2 = 1
+                | GET_FLAG(MJX_CHANNEL_FLIP, 0x04)
+                | GET_FLAG(MJX_CHANNEL_AUTOFLIP, 0x10)
+                | GET_FLAG(MJX_CHANNEL_HEADLESS, 0x20);
+            }
         break;
 
         case FORMAT_X800:
         default:
-        packet[10] = 0x10
-        | GET_FLAG_INV(MJX_CHANNEL_LED, 0x02)
-        | GET_FLAG(MJX_CHANNEL_AUTOFLIP, 0x01);
-        if (!bind) {
-            packet[14] = 0x02      // always high rates by bit2 = 1
-            | GET_FLAG(MJX_CHANNEL_FLIP, 0x04)
-            | GET_FLAG(MJX_CHANNEL_PICTURE, 0x08)
-            | GET_FLAG(MJX_CHANNEL_VIDEO, 0x10);
-        }
+            packet[10] = 0x10
+            | GET_FLAG_INV(MJX_CHANNEL_LED, 0x02)
+            | GET_FLAG(MJX_CHANNEL_AUTOFLIP, 0x01);
+            if (!bind) {
+                packet[14] = 0x02      // always high rates by bit2 = 1
+                | GET_FLAG(MJX_CHANNEL_FLIP, 0x04)
+                | GET_FLAG(MJX_CHANNEL_PICTURE, 0x08)
+                | GET_FLAG(MJX_CHANNEL_VIDEO, 0x10);
+            }
     }
     packet[15] = mjx_checksum();
 
@@ -184,7 +186,13 @@ uint32_t process_MJX()
 
 void initialize_mjx_txid()
 {
-    if (mjx_format == FORMAT_WLH08) {
+    // todo: check if e010 can work with semi arbitrary txid like WLH08
+    if( mjx_format == FORMAT_E010) {
+        mjx_txid[0] = 0x90;
+        mjx_txid[1] = 0x1c;
+        mjx_txid[2] = 0x00;
+    }
+    else if (mjx_format == FORMAT_WLH08) {
         // mjx_txid must be multiple of 8
         mjx_txid[0] = transmitterID[0] & 0xf8;
         mjx_txid[1] = transmitterID[1];
@@ -198,14 +206,19 @@ void MJX_init()
 {
     u8 rx_tx_addr[MJX_ADDRESS_LENGTH];
     
+    if (current_protocol == PROTO_E010)
+        mjx_format = FORMAT_E010;
+    else
+        mjx_format = FORMAT_X600; // change this to desired MJX sub format
+    
     initialize_mjx_txid();
     
     memcpy(rx_tx_addr, "\x6d\x6a\x77\x77\x77", sizeof(rx_tx_addr));
     if (mjx_format == FORMAT_WLH08) {
         memcpy(mjx_rf_channels, "\x12\x22\x32\x42", sizeof(mjx_rf_channels));
-        } else if (mjx_format == FORMAT_H26D) {
+    } else if (mjx_format == FORMAT_H26D || mjx_format == FORMAT_E010) {
         memcpy(mjx_rf_channels, "\x36\x3e\x46\x2e", sizeof(mjx_rf_channels));
-        } else {
+    } else {
         memcpy(mjx_rf_channels, "\x0a\x35\x42\x3d", sizeof(mjx_rf_channels));
         memcpy(rx_tx_addr, "\x6d\x6a\x73\x73\x73", sizeof(rx_tx_addr));
     }
@@ -215,7 +228,7 @@ void MJX_init()
 
     if (mjx_format == FORMAT_H26D) {
         NRF24L01_WriteRegisterMulti(NRF24L01_10_TX_ADDR, rx_tx_addr, sizeof(rx_tx_addr));
-        } else {
+    } else {
         XN297_SetTXAddr(rx_tx_addr, sizeof(rx_tx_addr));
     }
 
@@ -226,7 +239,10 @@ void MJX_init()
     NRF24L01_WriteReg(NRF24L01_02_EN_RXADDR, 0x01);
     NRF24L01_WriteReg(NRF24L01_04_SETUP_RETR, 0x00); // no retransmits
     NRF24L01_WriteReg(NRF24L01_11_RX_PW_P0, MJX_PACKET_SIZE);
-    NRF24L01_SetBitrate(NRF24L01_BR_1M);             // 1Mbps
+    if (mjx_format == FORMAT_E010)
+        NRF24L01_SetBitrate(NRF24L01_BR_250K);        // 250kbps
+    else
+        NRF24L01_SetBitrate(NRF24L01_BR_1M);          // 1Mbps
     NRF24L01_SetPower(RF_POWER);
     NRF24L01_Activate(0x73);                          // Activate feature register
     NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);       // Disable dynamic payload length on all pipes
@@ -238,7 +254,7 @@ void mjx_init2()
 {
     if (mjx_format == FORMAT_H26D) {
         memcpy(mjx_rf_channels, "\x32\x3e\x42\x4e", sizeof(mjx_rf_channels));
-    } else if (mjx_format != FORMAT_WLH08) {
+    } else if (mjx_format != FORMAT_WLH08 && mjx_format != FORMAT_E010) {
         memcpy(mjx_rf_channels, mjx_tx_rf_map[transmitterID[0] % (sizeof(mjx_tx_rf_map)/sizeof(mjx_tx_rf_map[0]))].rfchan, sizeof(mjx_rf_channels));
     }
 }
