@@ -240,7 +240,7 @@ void selectProtocol()
     
     // Rudder right + Aileron right + Elevator down
     else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND && ppm[ELEVATOR] < PPM_MIN_COMMAND)
-        current_protocol = PROTO_FQ777124; // EAchine E010, NiHui NH-010, JJRC H36 mini
+        current_protocol = PROTO_E010; // EAchine E010, NiHui NH-010, JJRC H36 mini
     
     // Rudder right + Aileron right + Elevator up
     else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND && ppm[ELEVATOR] > PPM_MAX_COMMAND)
