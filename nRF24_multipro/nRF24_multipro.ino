@@ -58,6 +58,9 @@
 
 #define RF_POWER TX_POWER_80mW 
 
+// tune ppm input for "special" transmitters
+// #define SPEKTRUM // TAER, 1100-1900, AIL & RUD reversed
+
 // PPM stream settings
 #define CHANNELS 12 // number of channels in ppm stream, 12 ideally
 enum chan_order{
@@ -375,7 +378,15 @@ void update_ppm()
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
             ppm[ch] = Servo_data[ch];
         }
-    }    
+    }
+#ifdef SPEKTRUM
+    for(uint8_t ch=0; ch<CHANNELS; ch++) {
+        if(ch == AILERON || ch == RUDDER) {
+            ppm[ch] = 3000-ppm[ch];
+        }
+        ppm[ch] = constrain(map(ppm[ch],1100,1900,PPM_MIN,PPM_MAX),PPM_MIN,PPM_MAX);
+    }
+#endif
 }
 
 void ISR_ppm()
