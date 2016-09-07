@@ -186,13 +186,8 @@ uint32_t process_MJX()
 
 void initialize_mjx_txid()
 {
-    // todo: check if e010 can work with semi arbitrary txid like WLH08
-    if( mjx_format == FORMAT_E010) {
-        mjx_txid[0] = 0x90;
-        mjx_txid[1] = 0x1c;
-        mjx_txid[2] = 0x00;
-    }
-    else if (mjx_format == FORMAT_WLH08) {
+    if (mjx_format == FORMAT_WLH08 ||
+        mjx_format == FORMAT_E010 ) {
         // mjx_txid must be multiple of 8
         mjx_txid[0] = transmitterID[0] & 0xf8;
         mjx_txid[1] = transmitterID[1];
