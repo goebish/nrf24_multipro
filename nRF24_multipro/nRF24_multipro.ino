@@ -384,7 +384,7 @@ void update_ppm()
         if(ch == AILERON || ch == RUDDER) {
             ppm[ch] = 3000-ppm[ch];
         }
-        ppm[ch] = constrain(map(ppm[ch],1100,1900,PPM_MIN,PPM_MAX),PPM_MIN,PPM_MAX);
+        ppm[ch] = constrain(map(ppm[ch],1120,1880,PPM_MIN,PPM_MAX),PPM_MIN,PPM_MAX);
     }
 #endif
 }
