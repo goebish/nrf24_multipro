@@ -185,8 +185,8 @@ void initialize_mjx_txid()
 {
     if (mjx_format == FORMAT_E010) {
          mjx_txid[0] = transmitterID[0] & 0xf8;
-         mjx_txid[1] = transmitterID[1];
-         mjx_txid[2] = 0;
+         mjx_txid[1] = (transmitterID[1] & 0xf0) | 0x0c;
+         mjx_txid[2] = transmitterID[2] & 0xf0;
     }
     else if (mjx_format == FORMAT_WLH08) {
         // mjx_txid must be multiple of 8
