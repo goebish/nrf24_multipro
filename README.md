@@ -6,6 +6,8 @@ nRF24L01 multi-protocol RC transmitter
 
 Create a model in OpenTX using external module in PPM mode, 12 channels and TAER sequence order.
 
+``` Binding Procedure ```
+
 #####Protocol is selected with stick position at startup:
 
 - Rudder right + Aileron right + Elevator down = EAchine E010, NiHui NH-010, JJRC H36 mini  
