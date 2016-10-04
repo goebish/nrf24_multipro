@@ -4,9 +4,13 @@ nRF24L01 multi-protocol RC transmitter
 ![Screenshot](http://i.imgur.com/AeMJKzT.jpg)  
 [Need a module ?](mailto://goebish@gmail.com)
 
-Create a model in OpenTX using external module in PPM mode, 12 channels and TAER sequence order.
+## Binding Procedure
+- Create a model in OpenTX using external module in PPM mode, 12 channels and TAER sequence order.
+- Turn off Taranis.
+- Power up quad.
+- While holding the appropriate stick pattern listed below, power up Taranis.
+- Arm quad based on it's firmware's specification. 
 
-``` Binding Procedure ```
 
 #####Protocol is selected with stick position at startup:
 
