@@ -139,7 +139,7 @@ void setup()
     pinMode(MISO_pin, INPUT);
 
     // PPM ISR setup
-    attachInterrupt(PPM_pin - 2, ISR_ppm, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(PPM_pin), ISR_ppm, CHANGE);
     TCCR1A = 0;  //reset timer1
     TCCR1B = 0;
     TCCR1B |= (1 << CS11);  //set timer1 to increment every 1 us @ 8MHz, 0.5 us @16MHz
