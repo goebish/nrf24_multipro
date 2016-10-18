@@ -52,6 +52,19 @@ static const struct {
 mjx_tx_rf_map[] = {{{0xF8, 0x4F, 0x1C}, {0x0A, 0x46, 0x3A, 0x42}},
                   {{0xC8, 0x6E, 0x02}, {0x0A, 0x3C, 0x36, 0x3F}},
                   {{0x48, 0x6A, 0x40}, {0x0A, 0x43, 0x36, 0x3F}}};
+                      
+static const struct {
+    u8 e010_txid[2];
+    u8 rfchan[MJX_RF_NUM_CHANNELS];
+}
+e010_tx_rf_map[] = {{{0x4F, 0x1C}, {0x3A, 0x35, 0x4A, 0x45}},
+                   {{0x90, 0x1C}, {0x2E, 0x36, 0x3E, 0x46}}, 
+                   {{0x24, 0x36}, {0x32, 0x3E, 0x42, 0x4E}},
+                   {{0x7A, 0x40}, {0x2E, 0x3C, 0x3E, 0x4C}},
+                   {{0x61, 0x31}, {0x2F, 0x3B, 0x3F, 0x4B}},
+                   {{0x5D, 0x37}, {0x33, 0x3B, 0x43, 0x4B}},
+                   {{0xFD, 0x4F}, {0x33, 0x3B, 0x43, 0x4B}}, 
+                   {{0x86, 0x3C}, {0x34, 0x3E, 0x44, 0x4E}}};
 
 u8 mjx_checksum()
 {
@@ -184,9 +197,8 @@ uint32_t process_MJX()
 void initialize_mjx_txid()
 {
     if (mjx_format == FORMAT_E010) {
-         mjx_txid[0] = transmitterID[0] & 0xf8;
-         mjx_txid[1] = (transmitterID[1] & 0xf0) | 0x0c;
-         mjx_txid[2] = transmitterID[2] & 0xf0;
+        memcpy(mjx_txid, e010_tx_rf_map[transmitterID[0] % (sizeof(e010_tx_rf_map)/sizeof(e010_tx_rf_map[0]))].e010_txid, 2);
+        mjx_txid[2] = 0x00;
     }
     else if (mjx_format == FORMAT_WLH08) {
         // mjx_txid must be multiple of 8
@@ -248,9 +260,12 @@ void MJX_init()
 
 void mjx_init2()
 {
-    if (mjx_format == FORMAT_H26D) {
+    if (mjx_format == FORMAT_E010) {
+        memcpy(mjx_rf_channels, e010_tx_rf_map[transmitterID[0] % (sizeof(e010_tx_rf_map)/sizeof(e010_tx_rf_map[0]))].rfchan, sizeof(mjx_rf_channels));
+    }
+    else if (mjx_format == FORMAT_H26D) {
         memcpy(mjx_rf_channels, "\x32\x3e\x42\x4e", sizeof(mjx_rf_channels));
-    } else if (mjx_format != FORMAT_WLH08 && mjx_format != FORMAT_E010) {
+    } else if (mjx_format != FORMAT_WLH08) {
         memcpy(mjx_rf_channels, mjx_tx_rf_map[transmitterID[0] % (sizeof(mjx_tx_rf_map)/sizeof(mjx_tx_rf_map[0]))].rfchan, sizeof(mjx_rf_channels));
     }
 }
