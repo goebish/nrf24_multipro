@@ -14,7 +14,7 @@
  */
 
 #define BAYANG_BIND_COUNT       1000
-#define BAYANG_PACKET_PERIOD    2000
+#define BAYANG_PACKET_PERIOD    1000
 #define BAYANG_PACKET_SIZE      15
 #define BAYANG_RF_NUM_CHANNELS  4
 #define BAYANG_RF_BIND_CHANNEL  0
@@ -23,6 +23,10 @@
 static uint8_t Bayang_rf_chan;
 static uint8_t Bayang_rf_channels[BAYANG_RF_NUM_CHANNELS] = {0,};
 static uint8_t Bayang_rx_tx_addr[BAYANG_ADDRESS_LENGTH];
+static uint16_t Bayang_telemetry_count=0;
+static uint16_t Bayang_last_telemetry_count=0;
+static uint16_t Bayang_loopcount=0;
+static uint16_t Bayang_count=0;
 
 enum{
     // flags going to packet[2]
@@ -41,7 +45,35 @@ enum{
 uint32_t process_Bayang()
 {
     uint32_t timeout = micros() + BAYANG_PACKET_PERIOD;
-    Bayang_send_packet(0);
+    if(current_protocol == PROTO_BAYANG_SILVERWARE) {
+        // telemetry is enabled
+        Bayang_loopcount++;
+        if (Bayang_loopcount > 1000) {
+            //calculate telemetry reception packet rate - packets per second
+            Bayang_loopcount = 0;
+            telemetry_data.rssi = Bayang_telemetry_count * 2;
+            // set updated if lower than previous, so an alarm can be used when telemetry lost but does not go on forever
+            if (Bayang_telemetry_count < Bayang_last_telemetry_count)
+                telemetry_data.updated = 1;
+            Bayang_last_telemetry_count = Bayang_telemetry_count;
+            Bayang_telemetry_count = 0;
+        }
+
+        if (Bayang_count == 0) {
+            Bayang_send_packet(0);
+            } else {
+            Bayang_check_rx();
+        }
+
+        Bayang_count++;
+        Bayang_count %= 5;
+    }
+    else {
+        if (Bayang_count == 0)
+            Bayang_send_packet(0);
+        Bayang_count++;
+        Bayang_count %= 2;
+    }    
     return timeout;
 }
 
@@ -64,6 +96,7 @@ void Bayang_init()
     NRF24L01_WriteReg(NRF24L01_01_EN_AA, 0x00);      // No Auto Acknowldgement on all data pipes
     NRF24L01_WriteReg(NRF24L01_02_EN_RXADDR, 0x01);
     NRF24L01_WriteReg(NRF24L01_03_SETUP_AW, 0x03);
+    NRF24L01_WriteReg(NRF24L01_11_RX_PW_P0, BAYANG_PACKET_SIZE);
     NRF24L01_WriteReg(NRF24L01_04_SETUP_RETR, 0x00); // no retransmits
     NRF24L01_SetBitrate(NRF24L01_BR_1M);             // 1Mbps
     NRF24L01_SetPower(RF_POWER);
@@ -78,11 +111,15 @@ void Bayang_bind()
 {
     uint16_t counter = BAYANG_BIND_COUNT;
     while(counter) {
-        Bayang_send_packet(1);
+        if (Bayang_count == 0)
+            Bayang_send_packet(1);
+        Bayang_count++;
+        Bayang_count %= 4;
         delayMicroseconds(BAYANG_PACKET_PERIOD);
         digitalWrite(ledPin, counter-- & 0x10);
     }
     XN297_SetTXAddr(Bayang_rx_tx_addr, BAYANG_ADDRESS_LENGTH);
+    XN297_SetRXAddr(Bayang_rx_tx_addr, BAYANG_ADDRESS_LENGTH);
     digitalWrite(ledPin, HIGH);
 }
 
@@ -99,7 +136,10 @@ void Bayang_send_packet(u8 bind)
     } chanval;
 
     if (bind) {
-        packet[0] = 0xa4;
+        if(current_protocol == PROTO_BAYANG_SILVERWARE)
+            packet[0] = 0xa3;
+        else
+            packet[0] = 0xa4;
         memcpy(&packet[1], Bayang_rx_tx_addr, 5);
         memcpy(&packet[6], Bayang_rf_channels, 4);
         packet[10] = transmitterID[0];
@@ -128,15 +168,61 @@ void Bayang_send_packet(u8 bind)
     }
     packet[12] = transmitterID[2];
     packet[13] = 0x0a;
-    packet[14] = 0;
-    for(uint8_t i=0; i<BAYANG_PACKET_SIZE-1; i++) {
-        packet[14] += packet[i];
-    }
+    packet[14] = Bayang_checksum();
     
+    NRF24L01_SetTxRxMode(TX_EN);
     XN297_Configure(_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP));
     NRF24L01_WriteReg(NRF24L01_05_RF_CH, bind ? BAYANG_RF_BIND_CHANNEL : Bayang_rf_channels[Bayang_rf_chan++]);
     Bayang_rf_chan %= sizeof(Bayang_rf_channels);
     NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);
     NRF24L01_FlushTx();
     XN297_WritePayload(packet, BAYANG_PACKET_SIZE);
+    
+    if(current_protocol == PROTO_BAYANG_SILVERWARE) {
+        // switch radio to rx, no crc
+        delayMicroseconds(450);
+        NRF24L01_SetTxRxMode(RX_EN);
+        NRF24L01_WriteReg(NRF24L01_00_CONFIG, 0x03);
+    }
 }
+
+static uint8_t Bayang_checksum()
+{
+    uint8_t sum = packet[0];
+    for (uint8_t i = 1; i < BAYANG_PACKET_SIZE - 1; i++)
+    sum += packet[i];
+    return sum;
+}
+
+static uint8_t Bayang_check_rx()
+{
+    union {
+        uint16_t value;
+        struct {
+            uint8_t lsb;
+            uint8_t msb;
+        } bytes;
+    } chanval;
+
+    if (NRF24L01_ReadReg(NRF24L01_07_STATUS) & _BV(NRF24L01_07_RX_DR)) {
+        // data received from aircraft
+        XN297_ReadPayload(packet, BAYANG_PACKET_SIZE);
+
+        NRF24L01_WriteReg(NRF24L01_07_STATUS, 0xff);
+
+        NRF24L01_FlushRx();
+        // decode data , check sum is ok as well, since there is no crc
+        if (packet[0] == 0x85 && packet[14] == Bayang_checksum()) {
+            // uncompensated battery volts*100
+            chanval.bytes.msb = packet[3] & 0x7;
+            chanval.bytes.lsb = packet[4] & 0xff;
+            telemetry_data.volt1 = chanval.value;
+            Bayang_telemetry_count++;
+            telemetry_data.updated = 1;
+            telemetry_data.lastUpdate = millis();
+            return 1;
+        }                       // end telemetry received
+    }
+    return 0;
+}
+

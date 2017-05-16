@@ -105,6 +105,7 @@ enum {
     PROTO_YD717,        // Cheerson CX-10 red (older version)/CX11/CX205/CX30, JXD389/390/391/393, SH6057/6043/6044/6046/6047, FY326Q7, WLToys v252 Pro/v343, XinXun X28/X30/X33/X39/X40
     PROTO_FQ777124,     // FQ777-124 pocket drone
     PROTO_E010,         // EAchine E010, NiHui NH-010, JJRC H36 mini
+    PROTO_BAYANG_SILVERWARE, // Bayang for Silverware with frsky telemetry
     PROTO_END
 };
 
@@ -116,6 +117,13 @@ enum{
     ee_TXID2,
     ee_TXID3
 };
+
+struct {
+    uint16_t volt1;
+    uint16_t rssi;
+    uint8_t updated;
+    uint32_t lastUpdate;
+} telemetry_data;
 
 uint8_t transmitterID[4];
 uint8_t current_protocol;
@@ -137,7 +145,8 @@ void setup()
     pinMode(CS_pin, OUTPUT);
     pinMode(CE_pin, OUTPUT);
     pinMode(MISO_pin, INPUT);
-
+    frskyInit();
+    
     // PPM ISR setup
     attachInterrupt(digitalPinToInterrupt(PPM_pin), ISR_ppm, CHANGE);
     TCCR1A = 0;  //reset timer1
@@ -158,6 +167,7 @@ void loop()
         NRF24L01_Initialize();
         init_protocol();
     }
+    telemetry_data.updated = 0;
     // process protocol
     switch(current_protocol) {
         case PROTO_CG023:
@@ -175,6 +185,7 @@ void loop()
             timeout = process_H7();
             break;
         case PROTO_BAYANG:
+        case PROTO_BAYANG_SILVERWARE:
             timeout = process_Bayang();
             break;
         case PROTO_SYMAX5C1:
@@ -203,9 +214,13 @@ void loop()
     }
     // updates ppm values out of ISR
     update_ppm();
-    // wait before sending next packet
-    while(micros() < timeout)
-    {   };
+    
+    while(micros() < timeout) {
+        if(telemetry_data.updated) {
+            frskyUpdate();
+        }            
+    }
+    telemetry_data.updated = 0;
 }
 
 void set_txid(bool renew)
@@ -234,15 +249,16 @@ void selectProtocol()
         ppm_ok = false;
     }
     
-    // startup stick commands
+    // startup stick commands (protocol selection / renew transmitter ID)
     
-    if(ppm[RUDDER] < PPM_MIN_COMMAND)        // Rudder left
+    if(ppm[RUDDER] < PPM_MIN_COMMAND && ppm[AILERON] < PPM_MIN_COMMAND) // rudder left + aileron left
+        current_protocol = PROTO_BAYANG_SILVERWARE; // Bayang protocol for Silverware with frsky telemetry
+        
+    else if(ppm[RUDDER] < PPM_MIN_COMMAND)   // Rudder left
         set_txid(true);                      // Renew Transmitter ID
     
-    // protocol selection
-    
     // Rudder right + Aileron right + Elevator down
-    if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND && ppm[ELEVATOR] < PPM_MIN_COMMAND)
+    else if(ppm[RUDDER] > PPM_MAX_COMMAND && ppm[AILERON] > PPM_MAX_COMMAND && ppm[ELEVATOR] < PPM_MIN_COMMAND)
         current_protocol = PROTO_E010; // EAchine E010, NiHui NH-010, JJRC H36 mini
     
     // Rudder right + Aileron right + Elevator up
@@ -339,6 +355,7 @@ void init_protocol()
             H7_bind();
             break;
         case PROTO_BAYANG:
+        case PROTO_BAYANG_SILVERWARE:
             Bayang_init();
             Bayang_bind();
             break;

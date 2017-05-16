@@ -14,6 +14,7 @@ nRF24L01 multi-protocol RC transmitter
 
 #### Protocol is selected with stick position at startup:
 
+- Rudder left + Aileron left = Bayang protocol with Silverware telemetry for OpenTX
 - Rudder right + Aileron right + Elevator down = EAchine E010, NiHui NH-010, JJRC H36 mini  
 - Rudder right + Aileron right + Elevator up = FQ-777-124 Pocket Drone  
 - Rudder right + Aileron left + Elevator up = CX-10 older red PCB/CX11/CX205/CX30, JXD389/391/393, SH6057/6043/6044/6046/6047, FY326Q7, WLToys v252 Pro/v343, XinXun X28/X30/X33/X39/X40   
