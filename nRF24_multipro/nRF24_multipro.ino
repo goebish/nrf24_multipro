@@ -426,6 +426,7 @@ void ISR_ppm()
     }
     else if(counterPPM > 1910 << PPM_SCALE) {  //sync pulses over 1910us
         chan = 0;
+        ppm_ok = true;
     }
     else{  //servo values between 510us and 2420us will end up here
         if(chan < CHANNELS) {
