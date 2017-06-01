@@ -27,7 +27,7 @@ enum {
     H8_3D_FLAG_RATE_HIGH= 0x04,
     H8_3D_FLAG_LED      = 0x08, // Light on H22
     H8_3D_FLAG_HEADLESS = 0x10, // RTH + headless on H8, headless on JJRC H20
-    H8_3D_FLAG_RTH      = 0x20, // 360° flip mode on H8 3D, RTH on JJRC H20
+    H8_3D_FLAG_RTH      = 0x20, // 360Â° flip mode on H8 3D, RTH on JJRC H20
 };
 
 enum {
@@ -81,7 +81,7 @@ void H8_3D_send_packet(uint8_t  bind)
         packet[6] = 0x08;
         packet[7] = 0x03;
         packet[9] = map(ppm[THROTTLE], PPM_MIN, PPM_MAX, 0, 0xff); // throttle
-        if( ppm[RUDDER] > PPM_MID)
+        if( ppm[RUDDER] >= PPM_MID)
             packet[10] = map(ppm[RUDDER], PPM_MID, PPM_MAX, 0, 0x3c); // rudder
         else
             packet[10] = map(ppm[RUDDER], PPM_MID, PPM_MIN, 0x80, 0xbc); // rudder
