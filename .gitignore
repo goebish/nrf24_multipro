@@ -4,3 +4,9 @@
 nRF24_multipro/Debug
 nRF24_multipro/Release
 nRF24_multipro/Visual Micro
+*.o
+*.elf
+*.hex
+*.map
+*~
+nRF24_multipro/prototypes.h
