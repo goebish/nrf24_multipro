@@ -72,7 +72,7 @@ enum chan_order{
     AUX4,  // (CH8)  video camera
     AUX5,  // (CH9)  headless
     AUX6,  // (CH10) calibrate Y (V2x2), pitch trim (H7), RTH (Bayang, H20), 360deg flip mode (H8-3D, H22)
-    AUX7,  // (CH11) calibrate X (V2x2), roll trim (H7)
+    AUX7,  // (CH11) calibrate X (V2x2), roll trim (H7), emergency stop (Bayang, Silverware)
     AUX8,  // (CH12) Reset / Rebind
 };
 

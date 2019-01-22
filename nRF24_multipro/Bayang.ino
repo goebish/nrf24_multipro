@@ -39,6 +39,7 @@ enum{
 
 enum{
     // flags going to packet[3]
+    BAYANG_FLAG_EMG_STOP = 0x04,
     BAYANG_FLAG_INVERT   = 0x80,
 };
 
@@ -152,7 +153,8 @@ void Bayang_send_packet(u8 bind)
                   | GET_FLAG(AUX6, BAYANG_FLAG_RTH)
                   | GET_FLAG(AUX3, BAYANG_FLAG_SNAPSHOT)
                   | GET_FLAG(AUX4, BAYANG_FLAG_VIDEO);
-        packet[3] = GET_FLAG(AUX1, BAYANG_FLAG_INVERT);
+        packet[3] = GET_FLAG(AUX1, BAYANG_FLAG_INVERT)
+                  | GET_FLAG(AUX7, BAYANG_FLAG_EMG_STOP);
         chanval.value = map(ppm[AILERON], PPM_MIN, PPM_MAX, 0, 0x3ff);   // aileron
         packet[4] = chanval.bytes.msb + DYNTRIM(chanval.value);
         packet[5] = chanval.bytes.lsb;

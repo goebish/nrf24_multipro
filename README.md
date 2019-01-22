@@ -28,7 +28,7 @@ nRF24L01 multi-protocol RC transmitter
 - Rudder right + Aileron left = EAchine H8 mini 3D, JJRC H20/H22   
 - Elevator down + Aileron left = Syma X5C-1/X11/X11C/X12  
 - Elevator down + Aileron right = Attop YD-822/YD-829/YD-829C ...  
-- Elevator up + Aileron right = EAchine H8(C) mini, BayangToys X6/X7/X9, JJRC JJ850, Floureon H101 ...  
+- Elevator up + Aileron right = EAchine H8(C) mini, BayangToys X6/X7/X9, JJRC JJ850, Floureon H101, BWhoop B03 ...  
 - Elevator up + Aileron left = EAchine H7  
 - Elevator up = WLToys V202/252/272, JXD 385/388, JJRC H6C, Yizhan Tarantula X6 ...  
 - Elevator down = EAchine CG023/CG031/3D X4  
@@ -45,5 +45,5 @@ Last used protocol is automatically selected if stick is in neutral position.
 - Channel 8: video camera, pitch trim (FQ777-124)  
 - Channel 9: headless  
 - Channel 10: calibrate Y (V2x2), pitch trim (H7), RTH (H8 mini/H20, FQ777-124), 360deg flip mode (H8 mini 3D/H22)  
-- Channel 11: calibrate X (V2x2), roll trim (H7,FQ777-124)  
+- Channel 11: calibrate X (V2x2), roll trim (H7,FQ777-124), emergency stop (BWhoop B03)  
 - Channel 12: Reset / Rebind  
