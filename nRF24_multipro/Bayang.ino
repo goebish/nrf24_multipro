@@ -82,12 +82,11 @@ void Bayang_init()
 {
     uint8_t i;
     const u8 bind_address[] = {0,0,0,0,0};
-    for(i=0; i<BAYANG_ADDRESS_LENGTH; i++) {
-        Bayang_rx_tx_addr[i] = random() & 0xff;
-    }
+    memcpy(Bayang_rx_tx_addr, transmitterID, 4);
+    Bayang_rx_tx_addr[4] = Bayang_rx_tx_addr[0] ^ 0xff;
     Bayang_rf_channels[0] = 0x00;
     for(i=1; i<BAYANG_RF_NUM_CHANNELS; i++) {
-        Bayang_rf_channels[i] = random() % 0x42;
+        Bayang_rf_channels[i] = transmitterID[i] % 0x42;
     }
     NRF24L01_Initialize();
     NRF24L01_SetTxRxMode(TX_EN);
