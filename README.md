@@ -2,10 +2,6 @@
 nRF24L01 multi-protocol RC transmitter
 
 ![Screenshot](http://i.imgur.com/AeMJKzT.jpg)  
-[Need a module ?](mailto:goebish@gmail.com?Subject=nrf24-multipro%20module)
-
-## Current build status
-[![Build Status](https://travis-ci.org/goebish/nrf24_multipro.svg?branch=master)](https://travis-ci.org/goebish/nrf24_multipro?branch=master)
 
 ## Binding Procedure
 - Create a model in OpenTX using external module in PPM mode, 12 channels and TAER sequence order.
